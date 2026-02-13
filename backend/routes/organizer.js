@@ -115,7 +115,7 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
             ticketId: ticketId,
             eventId: event._id,
             participantId: registration.participantId._id,
-            eventName: event.eventName,
+            eventName: event.name,
             participantName: `${registration.participantId.firstName} ${registration.participantId.lastName}`
         });
         const qrCode = await QRCode.toDataURL(qrData);
@@ -129,16 +129,16 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
         await registration.save();
 
         if (event.eventType === 'Merchandise') {
-            event.merchandise.stock = Math.max(0, event.merchandise.stock - 1);
+            event.stock = Math.max(0, event.stock - 1);
             await event.save();
         }
 
         const emailContent = `
             <h2>Payment Approved - Ticket Confirmation</h2>
             <p>Dear ${registration.participantId.firstName},</p>
-            <p>Your payment for <strong>${event.eventName}</strong> has been approved!</p>
+            <p>Your payment for <strong>${event.name}</strong> has been approved!</p>
             <p><strong>Ticket ID:</strong> ${ticketId}</p>
-            <p><strong>Event Date:</strong> ${new Date(event.eventStartDate).toLocaleDateString()}</p>
+            <p><strong>Event Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>
             <p>Please find your ticket QR code attached. Show this at the event for entry.</p>
             <img src="${qrCode}" alt="Ticket QR Code" style="display: block; margin: 20px 0;" />
             <p>Thank you for your registration!</p>
@@ -146,7 +146,7 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
 
         await sendEmail(
             registration.participantId.email,
-            `Payment Approved - ${event.eventName}`,
+            `Payment Approved - ${event.name}`,
             emailContent
         );
 
@@ -190,14 +190,14 @@ router.put('/reject-payment/:registrationId', auth, async (req, res) => {
         const emailContent = `
             <h2>Payment Rejected</h2>
             <p>Dear ${registration.participantId.firstName},</p>
-            <p>Unfortunately, your payment for <strong>${event.eventName}</strong> has been rejected.</p>
+            <p>Unfortunately, your payment for <strong>${event.name}</strong> has been rejected.</p>
             <p><strong>Reason:</strong> ${registration.paymentProof.rejectionReason}</p>
             <p>Please upload a valid payment proof or contact the organizers for assistance.</p>
         `;
 
         await sendEmail(
             registration.participantId.email,
-            `Payment Rejected - ${event.eventName}`,
+            `Payment Rejected - ${event.name}`,
             emailContent
         );
 

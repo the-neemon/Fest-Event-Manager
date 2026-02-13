@@ -110,14 +110,14 @@ const HomePage = () => {
     };
 
     const handleRegister = async (eventId, event) => {
-        // For merchandise events, show payment modal
-        if (event.eventType === 'Merchandise') {
+        // For merchandise events with fees, show payment modal
+        if (event.eventType === 'Merchandise' && event.registrationFee > 0) {
             setSelectedEvent(event);
             setShowPaymentModal(true);
             return;
         }
 
-        // For normal events, register directly
+        // For normal events or free merchandise, register directly
         if (!confirm("Are you sure you want to register?")) return;
         
         try {
