@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useContext, useEffect } from "react";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
@@ -20,7 +21,7 @@ const OnboardingPage = () => {
     useEffect(() => {
         const fetchOrganizers = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/auth/organizers");
+                const res = await axios.get(`${API_URL}/api/auth/organizers`);
                 setOrganizers(res.data);
             } catch (error) {
                 console.error("Error fetching organizers:", error);
@@ -48,7 +49,7 @@ const OnboardingPage = () => {
         const selectedInterests = Object.keys(interests).filter(key => interests[key]);
 
         try {
-            await axios.put("http://localhost:5000/api/auth/update-interests", 
+            await axios.put(`${API_URL}/api/auth/update-interests`, 
                 { 
                     interests: selectedInterests,
                     followedOrganizers: selectedOrganizers

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -83,7 +84,7 @@ const CreateEvent = () => {
                 itemDetails: eventType === 'Merchandise' ? { sizes: selectedSizes, colors: colorArray } : {},
             };
 
-            await axios.post("http://localhost:5000/api/events/create", payload, {
+            await axios.post(`${API_URL}/api/events/create`, payload, {
                 headers: { "x-auth-token": authTokens.token }
             });
 

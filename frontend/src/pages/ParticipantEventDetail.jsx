@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -19,7 +20,7 @@ const ParticipantEventDetail = () => {
 
     const fetchRegistration = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/events/my-registrations`, {
+            const res = await axios.get(`${API_URL}/api/events/my-registrations`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             const reg = res.data.find(r => r.eventId._id === eventId);

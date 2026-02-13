@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             // Always auto-generate credentials
-            const response = await axios.post("http://localhost:5000/api/admin/add-organizer", {
+            const response = await axios.post(`${API_URL}/api/admin/add-organizer`, {
                 ...formData,
                 autoGenerate: true
             }, {

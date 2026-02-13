@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -16,14 +17,14 @@ const MyEvents = () => {
     const fetchData = async () => {
         try {
             // Fetch upcoming events
-            const upcomingRes = await axios.get("http://localhost:5000/api/events/my-registrations/upcoming", {
+            const upcomingRes = await axios.get(`${API_URL}/api/events/my-registrations/upcoming`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             console.log("Upcoming registrations:", upcomingRes.data);
             setUpcomingEvents(upcomingRes.data);
 
             // Fetch all registrations for history
-            const allRes = await axios.get("http://localhost:5000/api/events/my-registrations", {
+            const allRes = await axios.get(`${API_URL}/api/events/my-registrations`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             console.log("All registrations:", allRes.data);
@@ -42,7 +43,7 @@ const MyEvents = () => {
         if (!confirm("Are you sure you want to cancel this registration?")) return;
 
         try {
-            await axios.put(`http://localhost:5000/api/events/cancel-registration/${registrationId}`, {}, {
+            await axios.put(`${API_URL}/api/events/cancel-registration/${registrationId}`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Registration cancelled successfully!");

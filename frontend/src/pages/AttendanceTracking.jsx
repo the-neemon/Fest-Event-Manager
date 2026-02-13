@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -39,7 +40,7 @@ const AttendanceTracking = () => {
     const fetchEventDetails = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:5000/api/events/${eventId}`,
+                `${API_URL}/api/events/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
             setEvent(res.data);
@@ -51,7 +52,7 @@ const AttendanceTracking = () => {
     const fetchAttendanceData = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:5000/api/attendance/event/${eventId}`,
+                `${API_URL}/api/attendance/event/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
             setStats(res.data.stats);
@@ -179,7 +180,7 @@ const AttendanceTracking = () => {
     const processScan = async (qrData, method) => {
         try {
             const res = await axios.post(
-                'http://localhost:5000/api/attendance/scan',
+                '${API_URL}/api/attendance/scan',
                 { qrData, method },
                 { headers: { 'x-auth-token': authTokens.token } }
             );
@@ -213,7 +214,7 @@ const AttendanceTracking = () => {
 
         try {
             const res = await axios.post(
-                `http://localhost:5000/api/attendance/manual/${registrationId}`,
+                `${API_URL}/api/attendance/manual/${registrationId}`,
                 { action, reason: manualReason },
                 { headers: { 'x-auth-token': authTokens.token } }
             );
@@ -230,7 +231,7 @@ const AttendanceTracking = () => {
     const fetchAuditLogs = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:5000/api/attendance/logs/${eventId}`,
+                `${API_URL}/api/attendance/logs/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
             setAuditLogs(res.data);

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -17,7 +18,7 @@ const OrganizerDetailPage = () => {
 
     const fetchOrganizerDetails = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/auth/organizer/${organizerId}`);
+            const res = await axios.get(`${API_URL}/api/auth/organizer/${organizerId}`);
             setOrganizer(res.data.organizer);
             setUpcomingEvents(res.data.upcomingEvents);
             setPastEvents(res.data.pastEvents);

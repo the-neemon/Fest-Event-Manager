@@ -257,6 +257,16 @@ router.post('/register/:id', auth, async (req, res) => {
 
         console.log('Event found:', event.name);
 
+        const participant = await Participant.findById(req.user.id);
+        if (!participant) {
+            return res.status(404).json({ msg: "Participant not found" });
+        }
+
+        // Check eligibility
+        if (event.eligibility === 'IIIT Students Only' && !participant.isIIITStudent) {
+            return res.status(403).json({ msg: "This event is only open to IIIT students" });
+        }
+
         const now = new Date();
         const deadline = new Date(event.registrationDeadline);
         if (now > deadline) {

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -17,7 +18,7 @@ const ClubsList = () => {
 
     const fetchClubs = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/auth/organizers");
+            const res = await axios.get(`${API_URL}/api/auth/organizers`);
             setClubs(res.data);
         } catch (err) {
             console.error("Error fetching clubs");
@@ -26,7 +27,7 @@ const ClubsList = () => {
 
     const fetchFollowedOrganizers = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/auth/followed-organizers", {
+            const res = await axios.get(`${API_URL}/api/auth/followed-organizers`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setFollowedOrganizers(res.data);
@@ -37,7 +38,7 @@ const ClubsList = () => {
 
     const handleFollow = async (organizerId) => {
         try {
-            await axios.post(`http://localhost:5000/api/auth/follow/${organizerId}`, {}, {
+            await axios.post(`${API_URL}/api/auth/follow/${organizerId}`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Successfully followed!");
@@ -50,7 +51,7 @@ const ClubsList = () => {
 
     const handleUnfollow = async (organizerId) => {
         try {
-            await axios.delete(`http://localhost:5000/api/auth/unfollow/${organizerId}`, {
+            await axios.delete(`${API_URL}/api/auth/unfollow/${organizerId}`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Successfully unfollowed!");

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import Navbar from "../components/Navbar";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
@@ -19,13 +20,28 @@ const HomePage = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [paymentProofFile, setPaymentProofFile] = useState(null);
     const [paymentProofPreview, setPaymentProofPreview] = useState(null);
+    const [participantProfile, setParticipantProfile] = useState(null);
     const { user, logoutUser, authTokens } = useContext(AuthContext);
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchEvents();
         fetchTrendingEvents();
+        if (user && user.role === 'participant') {
+            fetchParticipantProfile();
+        }
     }, []);
+
+    const fetchParticipantProfile = async () => {
+        try {
+            const res = await axios.get(`${API_URL}/api/auth/profile`, {
+                headers: { "x-auth-token": authTokens.token }
+            });
+            setParticipantProfile(res.data);
+        } catch (err) {
+            console.error("Error fetching participant profile:", err);
+        }
+    };
 
     const fetchEvents = async () => {
         try {
@@ -37,7 +53,7 @@ const HomePage = () => {
             if (filters.endDate) params.append('endDate', filters.endDate);
             if (filters.followedOnly) params.append('followedOnly', 'true');
 
-            const res = await axios.get(`http://localhost:5000/api/events/all?${params.toString()}`, {
+            const res = await axios.get(`${API_URL}/api/events/all?${params.toString()}`, {
                 headers: authTokens?.token ? { "x-auth-token": authTokens.token } : {}
             });
             setEvents(res.data);
@@ -55,7 +71,7 @@ const HomePage = () => {
             if (filters.endDate) params.append('endDate', filters.endDate);
             if (filters.followedOnly) params.append('followedOnly', 'true');
 
-            const res = await axios.get(`http://localhost:5000/api/events/trending?${params.toString()}`, {
+            const res = await axios.get(`${API_URL}/api/events/trending?${params.toString()}`, {
                 headers: authTokens?.token ? { "x-auth-token": authTokens.token } : {}
             });
             setTrendingEvents(res.data);
@@ -108,7 +124,7 @@ const HomePage = () => {
             console.log("Attempting registration for event:", eventId);
             console.log("Auth token:", authTokens?.token ? "Present" : "Missing");
             
-            const response = await axios.post(`http://localhost:5000/api/events/register/${eventId}`, {}, {
+            const response = await axios.post(`${API_URL}/api/events/register/${eventId}`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             
@@ -143,7 +159,7 @@ const HomePage = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:5000/api/events/register/${selectedEvent._id}`,
+                `${API_URL}/api/events/register/${selectedEvent._id}`,
                 { paymentProof: paymentProofPreview },
                 { headers: { "x-auth-token": authTokens.token } }
             );
@@ -161,6 +177,14 @@ const HomePage = () => {
 
     const isRegistrationClosed = (registrationDeadline) => {
         return new Date() > new Date(registrationDeadline);
+    };
+
+    const isEligible = (event) => {
+        if (!participantProfile) return true;
+        if (event.eligibility === 'IIIT Students Only' && !participantProfile.isIIITStudent) {
+            return false;
+        }
+        return true;
     };
 
     return (
@@ -348,6 +372,7 @@ const HomePage = () => {
                             
                             <div style={{ marginTop: "10px", fontSize: "13px", lineHeight: "1.6" }}>
                                 <div><strong>Type:</strong> {event.eventType}</div>
+                                <div><strong>Eligibility:</strong> {event.eligibility}</div>
                                 <div><strong>Start Date:</strong> {new Date(event.startDate).toLocaleString()}</div>
                                 <div><strong>End Date:</strong> {new Date(event.endDate).toLocaleString()}</div>
                                 <div><strong>Registration Deadline:</strong> {new Date(event.registrationDeadline).toLocaleString()}</div>
@@ -356,25 +381,42 @@ const HomePage = () => {
                             </div>
 
                             {user && user.role === "participant" && (
-                                <button 
-                                    style={{ 
-                                        marginTop: "15px", 
-                                        width: "100%", 
-                                        padding: "10px", 
-                                        backgroundColor: isRegistrationClosed(event.registrationDeadline) ? "#ccc" : "#5cb85c", 
-                                        color: "white", 
-                                        border: "none", 
-                                        cursor: isRegistrationClosed(event.registrationDeadline) ? "not-allowed" : "pointer",
-                                        opacity: isRegistrationClosed(event.registrationDeadline) ? 0.6 : 1
-                                    }}
-                                    onClick={() => handleRegister(event._id, event)}
-                                    disabled={isRegistrationClosed(event.registrationDeadline)}
-                                >
-                                    {isRegistrationClosed(event.registrationDeadline) 
-                                        ? "Registration Closed" 
-                                        : (event.eventType === 'Merchandise' ? 'Buy Now' : 'Register')
-                                    }
-                                </button>
+                                <>
+                                    {!isEligible(event) && (
+                                        <div style={{
+                                            marginTop: "10px",
+                                            padding: "8px",
+                                            backgroundColor: "#fff3cd",
+                                            border: "1px solid #ffc107",
+                                            borderRadius: "4px",
+                                            color: "#856404",
+                                            fontSize: "13px"
+                                        }}>
+                                            ⚠️ You are not eligible for this event
+                                        </div>
+                                    )}
+                                    <button 
+                                        style={{ 
+                                            marginTop: "15px", 
+                                            width: "100%", 
+                                            padding: "10px", 
+                                            backgroundColor: (isRegistrationClosed(event.registrationDeadline) || !isEligible(event)) ? "#ccc" : "#5cb85c", 
+                                            color: "white", 
+                                            border: "none", 
+                                            cursor: (isRegistrationClosed(event.registrationDeadline) || !isEligible(event)) ? "not-allowed" : "pointer",
+                                            opacity: (isRegistrationClosed(event.registrationDeadline) || !isEligible(event)) ? 0.6 : 1
+                                        }}
+                                        onClick={() => handleRegister(event._id, event)}
+                                        disabled={isRegistrationClosed(event.registrationDeadline) || !isEligible(event)}
+                                    >
+                                        {isRegistrationClosed(event.registrationDeadline) 
+                                            ? "Registration Closed" 
+                                            : !isEligible(event)
+                                            ? "Not Eligible"
+                                            : (event.eventType === 'Merchandise' ? 'Buy Now' : 'Register')
+                                        }
+                                    </button>
+                                </>
                             )}
                         </div>
                     ))}

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -10,7 +11,7 @@ const PasswordResetRequests = () => {
 
     const fetchRequests = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/api/admin/password-reset-requests", {
+            const response = await axios.get(`${API_URL}/api/admin/password-reset-requests`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setRequests(response.data);
@@ -31,7 +32,7 @@ const PasswordResetRequests = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:5000/api/admin/approve-password-reset/${requestId}`,
+                `${API_URL}/api/admin/approve-password-reset/${requestId}`,
                 {},
                 { headers: { "x-auth-token": authTokens.token } }
             );
@@ -51,7 +52,7 @@ const PasswordResetRequests = () => {
 
         try {
             await axios.delete(
-                `http://localhost:5000/api/admin/reject-password-reset/${requestId}`,
+                `${API_URL}/api/admin/reject-password-reset/${requestId}`,
                 { headers: { "x-auth-token": authTokens.token } }
             );
             alert("Request rejected successfully");

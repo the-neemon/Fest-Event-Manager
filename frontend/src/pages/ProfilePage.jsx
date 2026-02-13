@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -35,7 +36,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/auth/profile", {
+                const res = await axios.get(`${API_URL}/api/auth/profile`, {
                     headers: { "x-auth-token": authTokens.token }
                 });
                 setFormData(res.data);
@@ -52,7 +53,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchOrganizers = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/auth/organizers");
+                const res = await axios.get(`${API_URL}/api/auth/organizers`);
                 setAllOrganizers(res.data);
             } catch (error) {
                 console.error("Error fetching organizers:", error);
@@ -90,7 +91,7 @@ const ProfilePage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.put("http://localhost:5000/api/auth/profile", 
+            await axios.put(`${API_URL}/api/auth/profile`, 
                 formData,
                 { headers: { "x-auth-token": authTokens.token } }
             );
@@ -98,7 +99,7 @@ const ProfilePage = () => {
             setEditingInterests(false);
             setEditingClubs(false);
             
-            const res = await axios.get("http://localhost:5000/api/auth/profile", {
+            const res = await axios.get(`${API_URL}/api/auth/profile`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setFormData(res.data);
@@ -123,7 +124,7 @@ const ProfilePage = () => {
         }
         
         try {
-            await axios.put("http://localhost:5000/api/auth/change-password", 
+            await axios.put(`${API_URL}/api/auth/change-password`, 
                 {
                     currentPassword: passwordData.currentPassword,
                     newPassword: passwordData.newPassword

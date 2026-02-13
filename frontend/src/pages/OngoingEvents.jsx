@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -15,7 +16,7 @@ const OngoingEvents = () => {
 
     const fetchOngoingEvents = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/events/ongoing", {
+            const res = await axios.get(`${API_URL}/api/events/ongoing`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setOngoingEvents(res.data);

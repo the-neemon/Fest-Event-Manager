@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +18,7 @@ const OrganizerDashboard = () => {
 
     const fetchEvents = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/events/my-events", {
+            const res = await axios.get(`${API_URL}/api/events/my-events`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             // Auto-mark as completed if end date passed
@@ -37,7 +38,7 @@ const OrganizerDashboard = () => {
 
     const fetchAnalytics = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/events/analytics", {
+            const res = await axios.get(`${API_URL}/api/events/analytics`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setAnalytics(res.data);

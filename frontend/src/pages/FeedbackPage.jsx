@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -35,8 +36,8 @@ const FeedbackPage = () => {
     const fetchEventDetails = async () => {
         try {
             const endpoint = isOrganizer 
-                ? `http://localhost:5000/api/events/detail/${eventId}`
-                : `http://localhost:5000/api/events/${eventId}`;
+                ? `${API_URL}/api/events/detail/${eventId}`
+                : `${API_URL}/api/events/${eventId}`;
             const res = await axios.get(endpoint, {
                 headers: { "x-auth-token": authTokens.token }
             });
@@ -51,8 +52,8 @@ const FeedbackPage = () => {
     const fetchFeedbacks = async () => {
         try {
             const url = ratingFilter 
-                ? `http://localhost:5000/api/feedback/event/${eventId}?rating=${ratingFilter}`
-                : `http://localhost:5000/api/feedback/event/${eventId}`;
+                ? `${API_URL}/api/feedback/event/${eventId}?rating=${ratingFilter}`
+                : `${API_URL}/api/feedback/event/${eventId}`;
             const res = await axios.get(url, {
                 headers: { "x-auth-token": authTokens.token }
             });
@@ -65,7 +66,7 @@ const FeedbackPage = () => {
 
     const checkFeedbackSubmission = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/feedback/check/${eventId}`, {
+            const res = await axios.get(`${API_URL}/api/feedback/check/${eventId}`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setHasSubmitted(res.data.hasSubmitted);
@@ -82,7 +83,7 @@ const FeedbackPage = () => {
         }
         try {
             await axios.post(
-                `http://localhost:5000/api/feedback/${eventId}`,
+                `${API_URL}/api/feedback/${eventId}`,
                 { rating, comment },
                 { headers: { "x-auth-token": authTokens.token } }
             );
@@ -98,7 +99,7 @@ const FeedbackPage = () => {
     const handleExportCSV = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:5000/api/feedback/export/${eventId}`,
+                `${API_URL}/api/feedback/export/${eventId}`,
                 {
                     headers: { "x-auth-token": authTokens.token },
                     responseType: 'blob'

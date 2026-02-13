@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -24,7 +25,7 @@ const PaymentApproval = () => {
             console.log('Fetching payments for event:', eventId);
             console.log('Token exists:', !!authTokens?.token);
             const res = await axios.get(
-                `http://localhost:5000/api/organizer/pending-payments/${eventId}`,
+                `${API_URL}/api/organizer/pending-payments/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
             console.log('Payments received:', res.data);
@@ -42,7 +43,7 @@ const PaymentApproval = () => {
 
         try {
             const res = await axios.put(
-                `http://localhost:5000/api/organizer/approve-payment/${registrationId}`,
+                `${API_URL}/api/organizer/approve-payment/${registrationId}`,
                 {},
                 { headers: { 'x-auth-token': authTokens.token } }
             );
@@ -61,7 +62,7 @@ const PaymentApproval = () => {
 
         try {
             const res = await axios.put(
-                `http://localhost:5000/api/organizer/reject-payment/${registrationId}`,
+                `${API_URL}/api/organizer/reject-payment/${registrationId}`,
                 { rejectionReason },
                 { headers: { 'x-auth-token': authTokens.token } }
             );

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -22,7 +23,7 @@ const EventDetailPage = () => {
 
     const fetchEventDetails = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/events/detail/${eventId}`, {
+            const res = await axios.get(`${API_URL}/api/events/detail/${eventId}`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setEvent(res.data);
@@ -36,7 +37,7 @@ const EventDetailPage = () => {
 
     const fetchParticipants = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/events/${eventId}/participants`, {
+            const res = await axios.get(`${API_URL}/api/events/${eventId}/participants`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setParticipants(res.data);
@@ -48,7 +49,7 @@ const EventDetailPage = () => {
 
     const handlePublish = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/events/${eventId}/publish`, {}, {
+            await axios.put(`${API_URL}/api/events/${eventId}/publish`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Event published successfully!");
@@ -80,7 +81,7 @@ const EventDetailPage = () => {
 
     const handleSaveEdit = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/events/${eventId}/update`, editData, {
+            await axios.put(`${API_URL}/api/events/${eventId}/update`, editData, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Event updated successfully!");
@@ -93,7 +94,7 @@ const EventDetailPage = () => {
 
     const handleStatusChange = async (newStatus) => {
         try {
-            await axios.put(`http://localhost:5000/api/events/${eventId}/status`, 
+            await axios.put(`${API_URL}/api/events/${eventId}/status`, 
                 { status: newStatus },
                 { headers: { "x-auth-token": authTokens.token } }
             );

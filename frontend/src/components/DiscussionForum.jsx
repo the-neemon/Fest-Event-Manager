@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import AuthContext from '../context/AuthContext';
@@ -36,8 +37,8 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                 : null;
 
             const url = lastFetch 
-                ? `http://localhost:5000/api/forum/${eventId}/messages?lastFetch=${lastFetch}`
-                : `http://localhost:5000/api/forum/${eventId}/messages`;
+                ? `${API_URL}/api/forum/${eventId}/messages?lastFetch=${lastFetch}`
+                : `${API_URL}/api/forum/${eventId}/messages`;
 
             const res = await axios.get(url, {
                 headers: { 'x-auth-token': authTokens.token }
@@ -83,7 +84,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
 
         try {
             const res = await axios.post(
-                `http://localhost:5000/api/forum/${eventId}/messages`,
+                `${API_URL}/api/forum/${eventId}/messages`,
                 {
                     content: newMessage,
                     isAnnouncement: isOrganizer && isAnnouncement,
@@ -114,7 +115,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
     const handleReaction = async (messageId, emoji) => {
         try {
             const res = await axios.put(
-                `http://localhost:5000/api/forum/messages/${messageId}/react`,
+                `${API_URL}/api/forum/messages/${messageId}/react`,
                 { emoji },
                 { headers: { 'x-auth-token': authTokens.token } }
             );
@@ -130,7 +131,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
     const handlePin = async (messageId) => {
         try {
             const res = await axios.put(
-                `http://localhost:5000/api/forum/messages/${messageId}/pin`,
+                `${API_URL}/api/forum/messages/${messageId}/pin`,
                 {},
                 { headers: { 'x-auth-token': authTokens.token } }
             );
@@ -152,7 +153,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
 
         try {
             await axios.delete(
-                `http://localhost:5000/api/forum/messages/${messageId}`,
+                `${API_URL}/api/forum/messages/${messageId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
 

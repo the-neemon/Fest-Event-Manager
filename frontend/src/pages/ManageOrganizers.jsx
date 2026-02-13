@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -14,7 +15,7 @@ const ManageOrganizers = () => {
 
     const fetchOrganizers = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/api/admin/organizers", {
+            const response = await axios.get(`${API_URL}/api/admin/organizers`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setOrganizers(response.data);
@@ -31,7 +32,7 @@ const ManageOrganizers = () => {
         if (!confirm(`Are you sure you want to ${action} this organizer?`)) return;
 
         try {
-            await axios.put(`http://localhost:5000/api/admin/organizer/${id}/disable`, {}, {
+            await axios.put(`${API_URL}/api/admin/organizer/${id}/disable`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert(`Organizer ${action}d successfully!`);
@@ -46,7 +47,7 @@ const ManageOrganizers = () => {
         if (!confirm(`Are you sure you want to permanently delete "${name}"? This action cannot be undone.`)) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/admin/organizer/${id}`, {
+            await axios.delete(`${API_URL}/api/admin/organizer/${id}`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Organizer deleted successfully!");

@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -20,7 +21,7 @@ const OrganizerProfile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/organizer/profile", {
+            const res = await axios.get(`${API_URL}/api/organizer/profile`, {
                 headers: { "x-auth-token": authTokens.token }
             });
             setFormData(res.data);
@@ -37,7 +38,7 @@ const OrganizerProfile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.put("http://localhost:5000/api/organizer/profile", 
+            await axios.put(`${API_URL}/api/organizer/profile`, 
                 formData,
                 { headers: { "x-auth-token": authTokens.token } }
             );

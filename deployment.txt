@@ -1,0 +1,2 @@
+Backend URL: https://fest-event-manager.onrender.com
+Frontend URL: https://vercel.com/naman-singhals-projects-0dfdcbc0/fest-event-manager/A72cXeLsXR29EVR4hGDh11N1Znf2

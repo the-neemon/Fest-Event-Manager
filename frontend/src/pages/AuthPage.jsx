@@ -1,3 +1,4 @@
+import { API_URL } from "../config";
 import { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
@@ -45,7 +46,7 @@ const AuthPage = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("http://localhost:5000/api/auth/register", formData);
+            await axios.post(`${API_URL}/api/auth/register`, formData);
             alert("Registration Successful! Please Login.");
             setIsLogin(true); // Switch back to Login view
         } catch (error) {
@@ -60,7 +61,7 @@ const AuthPage = () => {
         const reason = prompt("Reason for password reset (optional):");
         
         try {
-            await axios.post("http://localhost:5000/api/auth/request-password-reset", {
+            await axios.post(`${API_URL}/api/auth/request-password-reset`, {
                 email,
                 reason
             });
