@@ -193,9 +193,37 @@ router.get('/all', async (req, res) => {
             if (endDate) query.startDate.$lte = new Date(endDate);
         }
 
-        const events = await Event.find(query)
-            .populate('organizerId', 'organizerName')
-            .sort({ startDate: 1 });
+        let events = await Event.find(query)
+            .populate('organizerId', 'organizerName');
+        
+        const token = req.header('x-auth-token');
+        if (token) {
+            try {
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded.user.role === 'participant') {
+                    const participant = await Participant.findById(decoded.user.id);
+                    if (participant && participant.interests && participant.interests.length > 0) {
+                        const userInterests = participant.interests.map(i => i.toLowerCase());
+                        events = events.sort((a, b) => {
+                            const aMatches = (a.tags || []).some(tag => userInterests.includes(tag.toLowerCase()));
+                            const bMatches = (b.tags || []).some(tag => userInterests.includes(tag.toLowerCase()));
+                            if (aMatches && !bMatches) return -1;
+                            if (!aMatches && bMatches) return 1;
+                            return new Date(a.startDate) - new Date(b.startDate);
+                        });
+                    } else {
+                        events = events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                    }
+                } else {
+                    events = events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                }
+            } catch (err) {
+                events = events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            }
+        } else {
+            events = events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+        }
         
         res.json(events);
     } catch (err) {
@@ -257,12 +285,46 @@ router.get('/trending', async (req, res) => {
             .map(([eventId]) => eventId);
 
         eventQuery._id = { $in: topEventIds };
-        const trendingEvents = await Event.find(eventQuery)
+        let trendingEvents = await Event.find(eventQuery)
             .populate('organizerId', 'organizerName');
 
-        const sortedEvents = trendingEvents.sort((a, b) => {
-            return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
-        });
+        const token = req.header('x-auth-token');
+        let sortedEvents;
+        if (token) {
+            try {
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded.user.role === 'participant') {
+                    const participant = await Participant.findById(decoded.user.id);
+                    if (participant && participant.interests && participant.interests.length > 0) {
+                        const userInterests = participant.interests.map(i => i.toLowerCase());
+                        sortedEvents = trendingEvents.sort((a, b) => {
+                            const aMatches = (a.tags || []).some(tag => userInterests.includes(tag.toLowerCase()));
+                            const bMatches = (b.tags || []).some(tag => userInterests.includes(tag.toLowerCase()));
+                            if (aMatches && !bMatches) return -1;
+                            if (!aMatches && bMatches) return 1;
+                            return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
+                        });
+                    } else {
+                        sortedEvents = trendingEvents.sort((a, b) => {
+                            return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
+                        });
+                    }
+                } else {
+                    sortedEvents = trendingEvents.sort((a, b) => {
+                        return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
+                    });
+                }
+            } catch (err) {
+                sortedEvents = trendingEvents.sort((a, b) => {
+                    return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
+                });
+            }
+        } else {
+            sortedEvents = trendingEvents.sort((a, b) => {
+                return eventCounts[b._id.toString()] - eventCounts[a._id.toString()];
+            });
+        }
 
         res.json(sortedEvents);
     } catch (err) {
