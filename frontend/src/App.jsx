@@ -26,9 +26,11 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Use AuthPage for both paths */}
+          <Route path="/" element={<AuthPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/register" element={<AuthPage />} /> 
           <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/events" element={<HomePage />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/manage-organizers" element={<ManageOrganizers />} />
           <Route path="/password-reset-requests" element={<PasswordResetRequests />} />
@@ -41,7 +43,6 @@ function App() {
           <Route path="/feedback/:eventId" element={<FeedbackPage />} />
           <Route path="/ongoing-events" element={<OngoingEvents />} />
           <Route path="/organizer-profile" element={<OrganizerProfile />} />
-          <Route path="/" element={<HomePage />} />
           <Route path="/clubs" element={<ClubsList />} />
           <Route path="/organizer/:organizerId" element={<OrganizerDetailPage />} />
           <Route path="/my-events" element={<MyEvents />} />

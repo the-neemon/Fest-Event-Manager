@@ -15,7 +15,7 @@ const Navbar = () => {
             padding: "15px 30px", backgroundColor: "#343a40", color: "white"
         }}>
             {/* Logo */}
-            <div style={{ fontSize: "20px", fontWeight: "bold", cursor: "pointer" }} onClick={() => navigate("/")}>
+            <div style={{ fontSize: "20px", fontWeight: "bold", cursor: "pointer" }} onClick={() => navigate("/events")}>
                 IIIT Events
             </div>
 
@@ -24,7 +24,7 @@ const Navbar = () => {
                 {user.role === "participant" && (
                     <>
                         <Link to="/my-events" style={linkStyle}>Dashboard</Link>
-                        <Link to="/" style={linkStyle}>Browse Events</Link>
+                        <Link to="/events" style={linkStyle}>Browse Events</Link>
                         <Link to="/clubs" style={linkStyle}>Clubs</Link>
                         <Link to="/profile" style={linkStyle}>Profile</Link>
                     </>
