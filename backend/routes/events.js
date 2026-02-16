@@ -46,9 +46,13 @@ router.post('/create', auth, async (req, res) => {
 
         if (status === 'Published') {
             const organizer = await Organizer.findById(req.user.id);
+            console.log('Event published, checking webhook...');
+            console.log('Organizer webhook URL:', organizer?.discordWebhook);
+            
             if (organizer && organizer.discordWebhook) {
                 try {
-                    await axios.post(organizer.discordWebhook, {
+                    console.log('Sending to Discord...');
+                    const response = await axios.post(organizer.discordWebhook, {
                         embeds: [{
                             title: `📅 ${event.name}`,
                             description: event.description,
@@ -63,9 +67,13 @@ router.post('/create', auth, async (req, res) => {
                             timestamp: new Date().toISOString()
                         }]
                     });
+                    console.log('Discord webhook success:', response.status);
                 } catch (webhookError) {
                     console.error('Discord webhook failed:', webhookError.message);
+                    console.error('Error details:', webhookError.response?.data);
                 }
+            } else {
+                console.log('No webhook URL configured');
             }
         }
 
