@@ -617,6 +617,34 @@ router.put('/:id/publish', auth, async (req, res) => {
         event.status = 'Published';
         await event.save();
 
+        const organizer = await Organizer.findById(req.user.id);
+        if (organizer && organizer.discordWebhook) {
+            try {
+                await axios.post(organizer.discordWebhook, {
+                    embeds: [{
+                        title: event.name,
+                        description: event.description,
+                        color: event.eventType === 'Merchandise' ? 0x9B59B6 : 0x3498DB,
+                        fields: [
+                            { name: 'Eligibility', value: event.eligibility, inline: true },
+                            { name: 'Fee', value: event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free', inline: true },
+                            { name: 'Location', value: event.location || 'TBA', inline: true },
+                            { name: 'Event Date', value: new Date(event.startDate).toLocaleDateString(), inline: true },
+                            { name: 'Available Spots', value: event.registrationLimit.toString(), inline: true }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'EventManagementBot/1.0'
+                    }
+                });
+            } catch (webhookError) {
+                // Webhook failed silently
+            }
+        }
+
         res.json({ msg: "Event published successfully", event });
     } catch (err) {
         console.error(err.message);
