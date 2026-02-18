@@ -287,6 +287,14 @@ const EventDetailPage = () => {
                                 `₹${event.registrationFee || 0}`
                             )}
                         </div>
+                        <div>
+                            <strong>Capacity:</strong><br />
+                            {editMode ? (
+                                <input type="number" value={editData.registrationLimit} onChange={(e) => setEditData({...editData, registrationLimit: e.target.value})} style={{ width: "100%" }} />
+                            ) : (
+                                event.registrationLimit
+                            )}
+                        </div>
                     </div>
                 </div>
 

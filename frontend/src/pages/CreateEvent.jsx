@@ -55,14 +55,6 @@ const CreateEvent = () => {
         setCustomQuestions(customQuestions.filter((_, i) => i !== index));
     };
 
-    const moveQuestion = (index, direction) => {
-        const newQuestions = [...customQuestions];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
-        [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
-        setCustomQuestions(newQuestions);
-    };
-
     // --- Merch Logic ---
     const handleSizeChange = (e) => {
         setMerchDetails({
@@ -80,7 +72,7 @@ const CreateEvent = () => {
             // Process custom questions - convert options string to array if needed
             const processedQuestions = customQuestions.map(q => ({
                 ...q,
-                options: (q.fieldType === 'dropdown' || q.fieldType === 'checkbox') ? q.options : ''
+                options: q.fieldType === 'checkbox' ? q.options : ''
             }));
 
             // Process Merch Sizes
@@ -192,9 +184,7 @@ const CreateEvent = () => {
                                     >
                                         <option value="text">Text</option>
                                         <option value="number">Number</option>
-                                        <option value="dropdown">Dropdown</option>
                                         <option value="checkbox">Checkbox</option>
-                                        <option value="file">File Upload</option>
                                     </select>
                                     <label style={{display: "flex", alignItems: "center", gap: "3px", fontSize: "12px"}}>
                                         <input 
@@ -204,13 +194,9 @@ const CreateEvent = () => {
                                         />
                                         Required
                                     </label>
-                                    <div style={{display: "flex", gap: "2px"}}>
-                                        <button type="button" onClick={() => moveQuestion(index, 'up')} disabled={index === 0} style={{padding: "4px 8px", fontSize: "12px"}}>↑</button>
-                                        <button type="button" onClick={() => moveQuestion(index, 'down')} disabled={index === customQuestions.length - 1} style={{padding: "4px 8px", fontSize: "12px"}}>↓</button>
-                                    </div>
                                     <button type="button" onClick={() => removeQuestion(index)} style={{color: "red", padding: "4px 8px"}}>X</button>
                                 </div>
-                                {(q.fieldType === 'dropdown' || q.fieldType === 'checkbox') && (
+                                {q.fieldType === 'checkbox' && (
                                     <input 
                                         placeholder="Options (comma separated, e.g. Option1, Option2)" 
                                         value={q.options} 
