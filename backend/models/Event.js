@@ -64,10 +64,10 @@ const eventSchema = new mongoose.Schema({
         default: 1
     },
     formFields: [{
-        label: String, // e.g. "Github Profile Link"
-        fieldType: String, // "text", "number", "dropdown"
+        label: String,
+        fieldType: String, // "text", "number", "dropdown", "checkbox", "file"
         required: Boolean,
-        options: [String] // For dropdowns
+        options: String // Comma-separated options for dropdown/checkbox
     }],
     status: {
         type: String,

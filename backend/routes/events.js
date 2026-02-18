@@ -666,7 +666,7 @@ router.put('/:id/update', auth, async (req, res) => {
 
         // Draft: Allow all edits
         if (event.status === 'Draft') {
-            const { name, description, startDate, endDate, registrationDeadline, location, eligibility, registrationFee, registrationLimit } = req.body;
+            const { name, description, startDate, endDate, registrationDeadline, location, eligibility, registrationFee, registrationLimit, formFields } = req.body;
             if (name) event.name = name;
             if (description) event.description = description;
             if (startDate) event.startDate = startDate;
@@ -676,13 +676,23 @@ router.put('/:id/update', auth, async (req, res) => {
             if (eligibility) event.eligibility = eligibility;
             if (registrationFee !== undefined) event.registrationFee = registrationFee;
             if (registrationLimit) event.registrationLimit = registrationLimit;
+            if (formFields) event.formFields = formFields;
         }
-        // Published: Limited edits only
+        // Published: Limited edits, check if form fields can be edited
         else if (event.status === 'Published') {
-            const { description, registrationDeadline, registrationLimit } = req.body;
+            const { description, registrationDeadline, registrationLimit, formFields } = req.body;
             if (description) event.description = description;
             if (registrationDeadline) event.registrationDeadline = registrationDeadline;
             if (registrationLimit) event.registrationLimit = registrationLimit;
+            
+            // Check if any registrations exist
+            if (formFields) {
+                const registrationCount = await Registration.countDocuments({ eventId: req.params.id });
+                if (registrationCount > 0) {
+                    return res.status(400).json({ msg: "Cannot edit form fields after registrations have been received" });
+                }
+                event.formFields = formFields;
+            }
         }
         else {
             return res.status(400).json({ msg: "Cannot edit events that are Ongoing, Completed, or Closed" });

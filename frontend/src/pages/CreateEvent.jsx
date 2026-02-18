@@ -42,7 +42,7 @@ const CreateEvent = () => {
 
     // --- Dynamic Form Logic ---
     const addQuestion = () => {
-        setCustomQuestions([...customQuestions, { label: "", fieldType: "text", required: false }]);
+        setCustomQuestions([...customQuestions, { label: "", fieldType: "text", required: false, options: "" }]);
     };
 
     const updateQuestion = (index, field, value) => {
@@ -53,6 +53,14 @@ const CreateEvent = () => {
 
     const removeQuestion = (index) => {
         setCustomQuestions(customQuestions.filter((_, i) => i !== index));
+    };
+
+    const moveQuestion = (index, direction) => {
+        const newQuestions = [...customQuestions];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
+        [newQuestions[index], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[index]];
+        setCustomQuestions(newQuestions);
     };
 
     // --- Merch Logic ---
@@ -69,6 +77,12 @@ const CreateEvent = () => {
             // Process Tags
             const tagArray = formData.tags.split(",").map(t => t.trim()).filter(t => t);
 
+            // Process custom questions - convert options string to array if needed
+            const processedQuestions = customQuestions.map(q => ({
+                ...q,
+                options: (q.fieldType === 'dropdown' || q.fieldType === 'checkbox') ? q.options : ''
+            }));
+
             // Process Merch Sizes
             const selectedSizes = Object.keys(merchDetails.sizes).filter(key => merchDetails.sizes[key]);
             const colorArray = merchDetails.colors.split(",").map(c => c.trim()).filter(c => c);
@@ -79,7 +93,7 @@ const CreateEvent = () => {
                 tags: tagArray,
                 status,  // Add status field
                 // Only attach if Normal
-                formFields: eventType === 'Normal' ? customQuestions : [],
+                formFields: eventType === 'Normal' ? processedQuestions : [],
                 // Only attach if Merch
                 itemDetails: eventType === 'Merchandise' ? { sizes: selectedSizes, colors: colorArray } : {},
             };
@@ -148,24 +162,65 @@ const CreateEvent = () => {
 
                 <hr />
 
-                {/* --- pe === "Normal" && (
+                {/* --- DYNAMIC SECTION FOR NORMAL EVENTS --- */}
+                {eventType === "Normal" && (
                     <div>
-                        <h4>Workshop Details</h4>
-                        <input type="number" name="registrationFee" placeholder="Registration Fee" onChange={handleChange} style={{marginBottom: "10px", width: "100%", padding: "8px"}} />
-                        <input name="location" placeholder="Location" onChange={handleChange} style={{width: "100%", padding: "8px"}} />
+                        <h4>Event Details</h4>
+                        <input 
+                            type="number" 
+                            name="registrationFee" 
+                            placeholder="Registration Fee (₹0 for free)" 
+                            onChange={handleChange} 
+                            style={{width: "100%", marginBottom: "10px", padding: "8px"}} 
+                        />
                         
                         <h5>Custom Registration Questions</h5>
                         {customQuestions.map((q, index) => (
-                            <div key={index} style={{ display: "flex", gap: "5px", marginBottom: "5px" }}>
-                                <input placeholder="Question (e.g. Diet Preference)" value={q.label} onChange={(e) => updateQuestion(index, 'label', e.target.value)} required style={{flex: 2}} />
-                                <select value={q.fieldType} onChange={(e) => updateQuestion(index, 'fieldType', e.target.value)}>
-                                    <option value="text">Text</option>
-                                    <option value="number">Number</option>
-                                </select>
-                                <button type="button" onClick={() => removeQuestion(index)} style={{color: "red"}}>X</button>
+                            <div key={index} style={{ border: "1px solid #ddd", padding: "10px", marginBottom: "10px", borderRadius: "4px" }}>
+                                <div style={{ display: "flex", gap: "5px", marginBottom: "8px", alignItems: "center" }}>
+                                    <input 
+                                        placeholder="Question Label" 
+                                        value={q.label} 
+                                        onChange={(e) => updateQuestion(index, 'label', e.target.value)} 
+                                        required 
+                                        style={{flex: 2, padding: "6px"}} 
+                                    />
+                                    <select 
+                                        value={q.fieldType} 
+                                        onChange={(e) => updateQuestion(index, 'fieldType', e.target.value)}
+                                        style={{padding: "6px"}}
+                                    >
+                                        <option value="text">Text</option>
+                                        <option value="number">Number</option>
+                                        <option value="dropdown">Dropdown</option>
+                                        <option value="checkbox">Checkbox</option>
+                                        <option value="file">File Upload</option>
+                                    </select>
+                                    <label style={{display: "flex", alignItems: "center", gap: "3px", fontSize: "12px"}}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={q.required} 
+                                            onChange={(e) => updateQuestion(index, 'required', e.target.checked)}
+                                        />
+                                        Required
+                                    </label>
+                                    <div style={{display: "flex", gap: "2px"}}>
+                                        <button type="button" onClick={() => moveQuestion(index, 'up')} disabled={index === 0} style={{padding: "4px 8px", fontSize: "12px"}}>↑</button>
+                                        <button type="button" onClick={() => moveQuestion(index, 'down')} disabled={index === customQuestions.length - 1} style={{padding: "4px 8px", fontSize: "12px"}}>↓</button>
+                                    </div>
+                                    <button type="button" onClick={() => removeQuestion(index)} style={{color: "red", padding: "4px 8px"}}>X</button>
+                                </div>
+                                {(q.fieldType === 'dropdown' || q.fieldType === 'checkbox') && (
+                                    <input 
+                                        placeholder="Options (comma separated, e.g. Option1, Option2)" 
+                                        value={q.options} 
+                                        onChange={(e) => updateQuestion(index, 'options', e.target.value)}
+                                        style={{width: "100%", padding: "6px", fontSize: "12px"}}
+                                    />
+                                )}
                             </div>
                         ))}
-                        <button type="button" onClick={addQuestion} style={{marginTop: "5px", fontSize: "12px"}}>+ Add Question</button>
+                        <button type="button" onClick={addQuestion} style={{marginTop: "5px", fontSize: "12px", padding: "8px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer"}}>+ Add Question</button>
                     </div>
                 )}
 
@@ -173,7 +228,7 @@ const CreateEvent = () => {
                 {eventType === "Merchandise" && (
                     <div>
                         <h4>Merchandise Details</h4>
-                        <input type="number" name="registrationFee" placeholder="Price" onChange={handleChange} style={{width: "100%", marginBottom: "10px", padding: "8px"}} />
+                        <input type="number" name="registrationFee" placeholder="Price" onChange={handleChange} required style={{width: "100%", marginBottom: "10px", padding: "8px"}} />
                         
                         <div style={{display: "flex", gap: "10px"}}>
                             <input type="number" name="stock" placeholder="Stock quantity" onChange={handleChange} style={{flex: 1, padding: "8px"}} />
