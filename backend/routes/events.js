@@ -46,34 +46,31 @@ router.post('/create', auth, async (req, res) => {
 
         if (status === 'Published') {
             const organizer = await Organizer.findById(req.user.id);
-            console.log('Event published, checking webhook...');
-            console.log('Organizer webhook URL:', organizer?.discordWebhook);
-            
             if (organizer && organizer.discordWebhook) {
                 try {
-                    console.log('Sending to Discord...');
-                    const response = await axios.post(organizer.discordWebhook, {
+                    await axios.post(organizer.discordWebhook, {
                         embeds: [{
-                            title: `📅 ${event.name}`,
+                            title: event.name,
                             description: event.description,
                             color: event.eventType === 'Merchandise' ? 0x9B59B6 : 0x3498DB,
                             fields: [
-                                { name: '🎯 Eligibility', value: event.eligibility, inline: true },
-                                { name: '💰 Fee', value: event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free', inline: true },
-                                { name: '📍 Location', value: event.location || 'TBA', inline: true },
-                                { name: '🗓️ Event Date', value: new Date(event.startDate).toLocaleDateString(), inline: true },
-                                { name: '📊 Spots', value: event.registrationLimit.toString(), inline: true }
+                                { name: 'Eligibility', value: event.eligibility, inline: true },
+                                { name: 'Fee', value: event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free', inline: true },
+                                { name: 'Location', value: event.location || 'TBA', inline: true },
+                                { name: 'Event Date', value: new Date(event.startDate).toLocaleDateString(), inline: true },
+                                { name: 'Available Spots', value: event.registrationLimit.toString(), inline: true }
                             ],
                             timestamp: new Date().toISOString()
                         }]
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'User-Agent': 'EventManagementBot/1.0'
+                        }
                     });
-                    console.log('Discord webhook success:', response.status);
                 } catch (webhookError) {
-                    console.error('Discord webhook failed:', webhookError.message);
-                    console.error('Error details:', webhookError.response?.data);
+                    // Webhook failed silently
                 }
-            } else {
-                console.log('No webhook URL configured');
             }
         }
 
