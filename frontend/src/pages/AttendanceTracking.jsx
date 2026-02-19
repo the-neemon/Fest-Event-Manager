@@ -39,6 +39,7 @@ const AttendanceTracking = () => {
 
     const fetchEventDetails = async () => {
         try {
+            console.log('Fetching event details for eventId:', eventId);
             const res = await axios.get(
                 `${API_URL}/api/events/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
@@ -46,6 +47,8 @@ const AttendanceTracking = () => {
             setEvent(res.data);
         } catch (err) {
             console.error('Error fetching event:', err);
+            console.error('EventId:', eventId);
+            console.error('Response:', err.response?.data);
         }
     };
 
@@ -179,11 +182,16 @@ const AttendanceTracking = () => {
 
     const processScan = async (qrData, method) => {
         try {
+            console.log('Processing scan - QR Data:', qrData);
+            console.log('Method:', method);
+            
             const res = await axios.post(
-                '${API_URL}/api/attendance/scan',
+                `${API_URL}/api/attendance/scan`,
                 { qrData, method },
                 { headers: { 'x-auth-token': authTokens.token } }
             );
+            
+            console.log('Scan successful:', res.data);
             
             setScanResult({
                 success: true,
@@ -196,6 +204,9 @@ const AttendanceTracking = () => {
             
             setTimeout(() => setScanResult(null), 5000);
         } catch (err) {
+            console.error('Scan error:', err);
+            console.error('Error response:', err.response?.data);
+            
             setScanResult({
                 success: false,
                 message: err.response?.data?.msg || 'Scan failed',
@@ -271,7 +282,7 @@ const AttendanceTracking = () => {
         return (
             <div>
                 <Navbar />
-                <div className="max-w-7xl mx-auto px-4 py-8">
+                <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
                     <p>Loading...</p>
                 </div>
             </div>
@@ -281,15 +292,15 @@ const AttendanceTracking = () => {
     return (
         <div>
             <Navbar />
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="flex justify-between items-center mb-6">
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
                     <div>
-                        <h1 className="text-3xl font-bold">Attendance Tracking</h1>
-                        <p className="text-gray-600 mt-1">{event?.name}</p>
+                        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>Attendance Tracking</h1>
+                        <p style={{ color: "#666", marginTop: "8px" }}>{event?.name}</p>
                     </div>
                     <button
                         onClick={() => navigate(-1)}
-                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        style={{ padding: "10px 20px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
                     >
                         Back to Event
                     </button>
@@ -297,34 +308,40 @@ const AttendanceTracking = () => {
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-blue-100 p-4 rounded-lg">
-                            <p className="text-sm text-gray-600">Total Registrations</p>
-                            <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "15px", marginBottom: "25px" }}>
+                        <div style={{ padding: "20px", backgroundColor: "#e3f2fd", borderRadius: "8px", textAlign: "center" }}>
+                            <p style={{ fontSize: "13px", color: "#666", margin: "0 0 8px 0" }}>Total Registrations</p>
+                            <p style={{ fontSize: "32px", fontWeight: "bold", color: "#1976d2", margin: 0 }}>{stats.total}</p>
                         </div>
-                        <div className="bg-green-100 p-4 rounded-lg">
-                            <p className="text-sm text-gray-600">Scanned</p>
-                            <p className="text-3xl font-bold text-green-600">{stats.scanned}</p>
+                        <div style={{ padding: "20px", backgroundColor: "#e8f5e9", borderRadius: "8px", textAlign: "center" }}>
+                            <p style={{ fontSize: "13px", color: "#666", margin: "0 0 8px 0" }}>Scanned</p>
+                            <p style={{ fontSize: "32px", fontWeight: "bold", color: "#388e3c", margin: 0 }}>{stats.scanned}</p>
                         </div>
-                        <div className="bg-yellow-100 p-4 rounded-lg">
-                            <p className="text-sm text-gray-600">Not Scanned</p>
-                            <p className="text-3xl font-bold text-yellow-600">{stats.notScanned}</p>
+                        <div style={{ padding: "20px", backgroundColor: "#fff8e1", borderRadius: "8px", textAlign: "center" }}>
+                            <p style={{ fontSize: "13px", color: "#666", margin: "0 0 8px 0" }}>Not Scanned</p>
+                            <p style={{ fontSize: "32px", fontWeight: "bold", color: "#f57c00", margin: 0 }}>{stats.notScanned}</p>
                         </div>
-                        <div className="bg-purple-100 p-4 rounded-lg">
-                            <p className="text-sm text-gray-600">Scan Rate</p>
-                            <p className="text-3xl font-bold text-purple-600">{stats.scanRate}%</p>
+                        <div style={{ padding: "20px", backgroundColor: "#f3e5f5", borderRadius: "8px", textAlign: "center" }}>
+                            <p style={{ fontSize: "13px", color: "#666", margin: "0 0 8px 0" }}>Scan Rate</p>
+                            <p style={{ fontSize: "32px", fontWeight: "bold", color: "#7b1fa2", margin: 0 }}>{stats.scanRate}%</p>
                         </div>
                     </div>
                 )}
 
                 {/* Scan Result Alert */}
                 {scanResult && (
-                    <div className={`mb-6 p-4 rounded-lg ${scanResult.success ? 'bg-green-100 border border-green-400' : 'bg-red-100 border border-red-400'}`}>
-                        <p className={`font-bold ${scanResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                    <div style={{
+                        marginBottom: "20px",
+                        padding: "15px",
+                        borderRadius: "8px",
+                        backgroundColor: scanResult.success ? '#d4edda' : '#f8d7da',
+                        border: scanResult.success ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
+                    }}>
+                        <p style={{ fontWeight: "bold", color: scanResult.success ? '#155724' : '#721c24', margin: 0 }}>
                             {scanResult.message}
                         </p>
                         {scanResult.participant && (
-                            <p className="text-sm mt-2 text-gray-700">
+                            <p style={{ fontSize: "14px", marginTop: "8px", color: "#555", margin: "8px 0 0 0" }}>
                                 {scanResult.participant.name} - {scanResult.participant.ticketId}
                             </p>
                         )}
@@ -332,36 +349,36 @@ const AttendanceTracking = () => {
                 )}
 
                 {/* Scanner Controls */}
-                <div className="bg-white border rounded-lg p-6 mb-6">
-                    <h2 className="text-xl font-bold mb-4">QR Code Scanner</h2>
-                    <div className="flex flex-wrap gap-3">
+                <div style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px", marginBottom: "25px" }}>
+                    <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px" }}>QR Code Scanner</h2>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                         {!scanning ? (
                             <button
                                 onClick={startCamera}
-                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                style={{ padding: "12px 24px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
                             >
                                 Start Camera Scan
                             </button>
                         ) : (
                             <button
                                 onClick={stopCamera}
-                                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold"
+                                style={{ padding: "12px 24px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
                             >
                                 Stop Camera
                             </button>
                         )}
-                        <label className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold cursor-pointer">
+                        <label style={{ padding: "12px 24px", backgroundColor: "#28a745", color: "white", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>
                             Upload QR Image
                             <input
                                 type="file"
                                 accept="image/*"
                                 onChange={handleFileUpload}
-                                className="hidden"
+                                style={{ display: "none" }}
                             />
                         </label>
                         <button
                             onClick={fetchAuditLogs}
-                            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold"
+                            style={{ padding: "12px 24px", backgroundColor: "#6f42c1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
                         >
                             View Audit Logs
                         </button>
@@ -369,52 +386,76 @@ const AttendanceTracking = () => {
 
                     {/* Camera Preview */}
                     {scanning && (
-                        <div className="mt-4">
+                        <div style={{ marginTop: "15px" }}>
                             <video
                                 ref={videoRef}
-                                className="w-full max-w-md border rounded"
+                                style={{ width: "100%", maxWidth: "450px", border: "1px solid #ddd", borderRadius: "6px" }}
                                 playsInline
                             />
-                            <canvas ref={canvasRef} className="hidden" />
-                            <p className="text-sm text-gray-600 mt-2">Position QR code in camera view</p>
+                            <canvas ref={canvasRef} style={{ display: "none" }} />
+                            <p style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>Position QR code in camera view</p>
                         </div>
                     )}
                 </div>
 
                 {/* Filters and Search */}
-                <div className="bg-white border rounded-lg p-6 mb-6">
-                    <div className="flex flex-wrap gap-4 items-center justify-between">
-                        <div className="flex gap-2">
+                <div style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px", marginBottom: "25px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", gap: "8px" }}>
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-4 py-2 rounded ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                                style={{
+                                    padding: "10px 16px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    backgroundColor: filter === 'all' ? '#007bff' : '#e0e0e0',
+                                    color: filter === 'all' ? 'white' : '#333'
+                                }}
                             >
                                 All ({registrations.length})
                             </button>
                             <button
                                 onClick={() => setFilter('scanned')}
-                                className={`px-4 py-2 rounded ${filter === 'scanned' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+                                style={{
+                                    padding: "10px 16px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    backgroundColor: filter === 'scanned' ? '#28a745' : '#e0e0e0',
+                                    color: filter === 'scanned' ? 'white' : '#333'
+                                }}
                             >
                                 Scanned ({registrations.filter(r => r.attendance.marked).length})
                             </button>
                             <button
                                 onClick={() => setFilter('not-scanned')}
-                                className={`px-4 py-2 rounded ${filter === 'not-scanned' ? 'bg-yellow-600 text-white' : 'bg-gray-200'}`}
+                                style={{
+                                    padding: "10px 16px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    backgroundColor: filter === 'not-scanned' ? '#ffc107' : '#e0e0e0',
+                                    color: filter === 'not-scanned' ? '#333' : '#333'
+                                }}
                             >
                                 Not Scanned ({registrations.filter(r => !r.attendance.marked).length})
                             </button>
                         </div>
-                        <div className="flex gap-2">
+                        <div style={{ display: "flex", gap: "8px" }}>
                             <input
                                 type="text"
                                 placeholder="Search by name, email, or ticket..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="px-4 py-2 border rounded w-64"
+                                style={{ padding: "10px 16px", border: "1px solid #ddd", borderRadius: "6px", width: "280px" }}
                             />
                             <button
                                 onClick={exportToCSV}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                                style={{ padding: "10px 20px", backgroundColor: "#6610f2", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
                             >
                                 Export CSV
                             </button>
@@ -423,51 +464,51 @@ const AttendanceTracking = () => {
                 </div>
 
                 {/* Attendance List */}
-                <div className="bg-white border rounded-lg overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
+                <div style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", overflow: "hidden" }}>
+                    <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead style={{ backgroundColor: "#f8f9fa" }}>
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Ticket ID</th>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Participant</th>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Contact</th>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Marked At</th>
-                                    <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Ticket ID</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Participant</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Contact</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Status</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Marked At</th>
+                                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", borderBottom: "1px solid #ddd" }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredRegistrations.map((reg) => (
-                                    <tr key={reg._id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm font-mono">{reg.ticketId}</td>
-                                        <td className="px-4 py-3">
+                                    <tr key={reg._id} style={{ borderBottom: "1px solid #eee" }}>
+                                        <td style={{ padding: "12px 16px", fontSize: "13px", fontFamily: "monospace" }}>{reg.ticketId}</td>
+                                        <td style={{ padding: "12px 16px" }}>
                                             <div>
-                                                <p className="font-semibold">{reg.participant.name}</p>
-                                                <p className="text-xs text-gray-600">{reg.participant.email}</p>
+                                                <p style={{ fontWeight: "600", margin: 0 }}>{reg.participant.name}</p>
+                                                <p style={{ fontSize: "12px", color: "#666", margin: "4px 0 0 0" }}>{reg.participant.email}</p>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm">{reg.participant.contact || 'N/A'}</td>
-                                        <td className="px-4 py-3">
+                                        <td style={{ padding: "12px 16px", fontSize: "13px" }}>{reg.participant.contact || 'N/A'}</td>
+                                        <td style={{ padding: "12px 16px" }}>
                                             {reg.attendance.marked ? (
-                                                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                                                <span style={{ display: "inline-block", padding: "4px 12px", backgroundColor: "#d4edda", color: "#155724", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
                                                     Present
                                                 </span>
                                             ) : (
-                                                <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">
+                                                <span style={{ display: "inline-block", padding: "4px 12px", backgroundColor: "#f0f0f0", color: "#333", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
                                                     Absent
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        <td style={{ padding: "12px 16px", fontSize: "13px" }}>
                                             {reg.attendance.marked 
                                                 ? new Date(reg.attendance.timestamp).toLocaleString()
                                                 : '-'
                                             }
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td style={{ padding: "12px 16px" }}>
                                             <button
                                                 onClick={() => setShowManualModal(reg)}
-                                                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                                style={{ padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", fontSize: "13px", cursor: "pointer" }}
                                             >
                                                 Manual Override
                                             </button>
@@ -477,7 +518,7 @@ const AttendanceTracking = () => {
                             </tbody>
                         </table>
                         {filteredRegistrations.length === 0 && (
-                            <div className="text-center py-8 text-gray-600">
+                            <div style={{ textAlign: "center", padding: "40px 20px", color: "#666" }}>
                                 No participants found
                             </div>
                         )}
@@ -487,34 +528,34 @@ const AttendanceTracking = () => {
 
             {/* Manual Override Modal */}
             {showManualModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                        <h3 className="text-xl font-bold mb-4">Manual Override</h3>
-                        <p className="mb-2"><strong>Participant:</strong> {showManualModal.participant.name}</p>
-                        <p className="mb-4"><strong>Current Status:</strong> {showManualModal.attendance.marked ? 'Present' : 'Absent'}</p>
+                <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+                    <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "24px", maxWidth: "500px", width: "100%" }}>
+                        <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Manual Override</h3>
+                        <p style={{ marginBottom: "8px" }}><strong>Participant:</strong> {showManualModal.participant.name}</p>
+                        <p style={{ marginBottom: "16px" }}><strong>Current Status:</strong> {showManualModal.attendance.marked ? 'Present' : 'Absent'}</p>
                         
-                        <label className="block mb-2 font-semibold">Reason for Override:</label>
+                        <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>Reason for Override:</label>
                         <textarea
                             value={manualReason}
                             onChange={(e) => setManualReason(e.target.value)}
-                            className="w-full border rounded p-3 mb-4 h-24"
+                            style={{ width: "100%", border: "1px solid #ddd", borderRadius: "4px", padding: "12px", height: "100px", fontSize: "14px", marginBottom: "16px", resize: "vertical" }}
                             placeholder="e.g., QR code damaged, lost phone, technical issues..."
                         />
                         
-                        <div className="flex gap-3 justify-end">
+                        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
                             <button
                                 onClick={() => {
                                     setShowManualModal(null);
                                     setManualReason('');
                                 }}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                style={{ padding: "8px 16px", backgroundColor: "#e0e0e0", border: "none", borderRadius: "4px", cursor: "pointer" }}
                             >
                                 Cancel
                             </button>
                             {!showManualModal.attendance.marked && (
                                 <button
                                     onClick={() => handleManualOverride(showManualModal._id, 'mark')}
-                                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                                    style={{ padding: "8px 16px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
                                 >
                                     Mark Present
                                 </button>
@@ -522,7 +563,7 @@ const AttendanceTracking = () => {
                             {showManualModal.attendance.marked && (
                                 <button
                                     onClick={() => handleManualOverride(showManualModal._id, 'unmark')}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                    style={{ padding: "8px 16px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
                                 >
                                     Mark Absent
                                 </button>
@@ -534,43 +575,49 @@ const AttendanceTracking = () => {
 
             {/* Audit Logs Modal */}
             {showLogsModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold">Audit Logs</h3>
+                <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+                    <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "24px", maxWidth: "900px", width: "100%", maxHeight: "80vh", overflowY: "auto" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                            <h3 style={{ fontSize: "20px", fontWeight: "bold" }}>Audit Logs</h3>
                             <button
                                 onClick={() => setShowLogsModal(false)}
-                                className="text-gray-600 hover:text-gray-800 text-2xl"
+                                style={{ fontSize: "28px", color: "#666", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}
                             >
                                 ×
                             </button>
                         </div>
-                        <div className="space-y-3">
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                             {auditLogs.map((log) => (
-                                <div key={log._id} className="border rounded p-3 bg-gray-50">
-                                    <div className="flex justify-between items-start mb-2">
+                                <div key={log._id} style={{ border: "1px solid #ddd", borderRadius: "6px", padding: "16px", backgroundColor: "#f9f9f9" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "10px" }}>
                                         <div>
-                                            <p className="font-semibold">
+                                            <p style={{ fontWeight: "600", margin: 0 }}>
                                                 {log.participantId?.firstName} {log.participantId?.lastName}
                                             </p>
-                                            <p className="text-sm text-gray-600">{log.participantId?.email}</p>
+                                            <p style={{ fontSize: "13px", color: "#666", margin: "4px 0 0 0" }}>{log.participantId?.email}</p>
                                         </div>
-                                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                            log.action === 'marked' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
+                                        <span style={{
+                                            display: "inline-block",
+                                            padding: "4px 12px",
+                                            borderRadius: "20px",
+                                            fontSize: "12px",
+                                            fontWeight: "600",
+                                            backgroundColor: log.action === 'marked' ? '#d4edda' : '#f8d7da',
+                                            color: log.action === 'marked' ? '#155724' : '#721c24'
+                                        }}>
                                             {log.action}
                                         </span>
                                     </div>
-                                    <div className="text-sm text-gray-700">
-                                        <p><strong>Method:</strong> {log.method}</p>
-                                        <p><strong>By:</strong> {log.performedBy?.organizerName}</p>
-                                        <p><strong>Time:</strong> {new Date(log.timestamp).toLocaleString()}</p>
-                                        {log.reason && <p><strong>Reason:</strong> {log.reason}</p>}
+                                    <div style={{ fontSize: "13px", color: "#555" }}>
+                                        <p style={{ margin: "4px 0" }}><strong>Method:</strong> {log.method}</p>
+                                        <p style={{ margin: "4px 0" }}><strong>By:</strong> {log.performedBy?.organizerName}</p>
+                                        <p style={{ margin: "4px 0" }}><strong>Time:</strong> {new Date(log.timestamp).toLocaleString()}</p>
+                                        {log.reason && <p style={{ margin: "4px 0" }}><strong>Reason:</strong> {log.reason}</p>}
                                     </div>
                                 </div>
                             ))}
                             {auditLogs.length === 0 && (
-                                <p className="text-center text-gray-600 py-4">No audit logs yet</p>
+                                <p style={{ textAlign: "center", color: "#666", padding: "20px" }}>No audit logs yet</p>
                             )}
                         </div>
                     </div>

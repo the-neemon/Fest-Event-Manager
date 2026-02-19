@@ -73,7 +73,7 @@ const AdminDashboard = () => {
                             <p style={{ margin: "5px 0", color: "#155724" }}><strong>Email:</strong> {generatedCredentials.email}</p>
                             <p style={{ margin: "5px 0", color: "#155724" }}><strong>Password:</strong> {generatedCredentials.password}</p>
                             <p style={{ fontSize: "12px", color: "#155724", marginTop: "10px" }}>
-                                ⚠️ Please share these credentials with the club. This password will not be shown again.
+                                Please share these credentials with the club. This password will not be shown again.
                             </p>
                             <button 
                                 onClick={() => setGeneratedCredentials(null)}

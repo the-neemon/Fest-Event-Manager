@@ -34,7 +34,7 @@ const generateQRCode = async (data) => {
 };
 
 // Send ticket email
-const sendTicketEmail = async (participant, event, ticketId) => {
+const sendTicketEmail = async (participant, event, ticketId, registrationId = null) => {
     try {
         // Check if email service is configured
         if (!transporter) {
@@ -43,11 +43,13 @@ const sendTicketEmail = async (participant, event, ticketId) => {
         }
 
         // Generate QR code containing ticket information
+        // IMPORTANT: This format must match what the attendance scanner expects
         const qrData = JSON.stringify({
             ticketId: ticketId,
+            eventId: event._id.toString(),
+            participantId: participant._id.toString(),
             eventName: event.name,
-            participantEmail: participant.email,
-            eventDate: event.startDate
+            participantName: `${participant.firstName} ${participant.lastName}`
         });
         
         const qrCodeImage = await generateQRCode(qrData);

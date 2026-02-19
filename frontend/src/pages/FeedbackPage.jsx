@@ -345,7 +345,7 @@ const FeedbackPage = () => {
                     }}>
                         {hasSubmitted ? (
                             <div style={{ textAlign: 'center', padding: '40px' }}>
-                                <div style={{ fontSize: '64px', marginBottom: '20px' }}>✓</div>
+                                <div style={{ fontSize: '64px', marginBottom: '20px' }}></div>
                                 <h3 style={{ color: '#28a745', marginBottom: '10px' }}>
                                     Thank you for your feedback!
                                 </h3>
@@ -416,7 +416,7 @@ const FeedbackPage = () => {
                                     border: '1px solid #ffc107'
                                 }}>
                                     <p style={{ margin: 0, fontSize: '13px', color: '#856404' }}>
-                                        🔒 Your feedback is completely anonymous. Organizers will not know who submitted it.
+                                         Your feedback is completely anonymous. Organizers will not know who submitted it.
                                     </p>
                                 </div>
 

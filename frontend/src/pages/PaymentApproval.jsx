@@ -79,19 +79,6 @@ const PaymentApproval = () => {
         ? payments 
         : payments.filter(p => p.paymentProof?.status === filterStatus);
 
-    const getStatusBadge = (status) => {
-        const styles = {
-            pending: 'bg-yellow-100 text-yellow-800',
-            approved: 'bg-green-100 text-green-800',
-            rejected: 'bg-red-100 text-red-800'
-        };
-        return (
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles[status] || 'bg-gray-100'}`}>
-                {status.toUpperCase()}
-            </span>
-        );
-    };
-
     if (loading) {
         return (
             <div>
@@ -106,28 +93,32 @@ const PaymentApproval = () => {
     return (
         <div>
             <Navbar />
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold">Payment Approvals</h1>
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+                    <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>Payment Approvals</h1>
                     <button
                         onClick={() => navigate(-1)}
-                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        style={{ padding: "10px 20px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
                     >
-                        Back to Event
+                        Back
                     </button>
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex gap-4 mb-6 border-b">
+                <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #ddd", paddingBottom: "10px" }}>
                     {['all', 'pending', 'approved', 'rejected'].map(status => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-4 py-2 font-semibold ${
-                                filterStatus === status
-                                    ? 'border-b-2 border-blue-600 text-blue-600'
-                                    : 'text-gray-600 hover:text-gray-800'
-                            }`}
+                            style={{
+                                padding: "8px 16px",
+                                fontWeight: filterStatus === status ? "bold" : "normal",
+                                borderBottom: filterStatus === status ? "2px solid #007bff" : "none",
+                                color: filterStatus === status ? "#007bff" : "#666",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                cursor: "pointer"
+                            }}
                         >
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                             {status !== 'all' && ` (${payments.filter(p => p.paymentProof?.status === status).length})`}
@@ -136,75 +127,80 @@ const PaymentApproval = () => {
                 </div>
 
                 {filteredPayments.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                        <p className="text-gray-600">No payments to display</p>
+                    <div style={{ textAlign: "center", padding: "60px 20px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
+                        <p style={{ color: "#666", margin: 0 }}>No payments to display</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                         {filteredPayments.map((payment) => (
-                            <div key={payment._id} className="bg-white border rounded-lg p-6 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-semibold mb-2">
+                            <div key={payment._id} style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "20px", alignItems: "start" }}>
+                                    {/* Participant Info */}
+                                    <div>
+                                        <h3 style={{ fontSize: "18px", fontWeight: "600", margin: "0 0 8px 0" }}>
                                             {payment.participantId?.firstName} {payment.participantId?.lastName}
                                         </h3>
-                                        <p className="text-gray-600 mb-2">{payment.participantId?.email}</p>
-                                        <p className="text-sm text-gray-500">
+                                        <p style={{ color: "#666", margin: "0 0 5px 0", fontSize: "14px" }}>{payment.participantId?.email}</p>
+                                        <p style={{ fontSize: "13px", color: "#999", margin: "0 0 3px 0" }}>
                                             Uploaded: {new Date(payment.paymentProof?.uploadedAt).toLocaleString()}
                                         </p>
                                         {payment.paymentProof?.reviewedAt && (
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p style={{ fontSize: "13px", color: "#999", margin: 0 }}>
                                                 Reviewed: {new Date(payment.paymentProof.reviewedAt).toLocaleString()}
                                             </p>
                                         )}
                                         {payment.paymentProof?.rejectionReason && (
-                                            <p className="text-sm text-red-600 mt-2">
+                                            <p style={{ fontSize: "13px", color: "#dc3545", marginTop: "8px", padding: "8px", backgroundColor: "#fff5f5", borderRadius: "4px" }}>
                                                 <strong>Reason:</strong> {payment.paymentProof.rejectionReason}
                                             </p>
                                         )}
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        {getStatusBadge(payment.paymentProof?.status)}
+
+                                    {/* Payment Proof Thumbnail */}
+                                    {payment.paymentProof?.data && (
+                                        <img
+                                            src={payment.paymentProof.data}
+                                            alt="Payment Proof"
+                                            style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "6px", border: "1px solid #ddd", cursor: "pointer" }}
+                                            onClick={() => setSelectedImage(payment.paymentProof.data)}
+                                        />
+                                    )}
+
+                                    {/* Status and Ticket */}
+                                    <div style={{ textAlign: "right" }}>
+                                        <span style={{
+                                            display: "inline-block",
+                                            padding: "6px 12px",
+                                            borderRadius: "20px",
+                                            fontSize: "12px",
+                                            fontWeight: "600",
+                                            backgroundColor: payment.paymentProof?.status === 'pending' ? '#fff3cd' : payment.paymentProof?.status === 'approved' ? '#d4edda' : '#f8d7da',
+                                            color: payment.paymentProof?.status === 'pending' ? '#856404' : payment.paymentProof?.status === 'approved' ? '#155724' : '#721c24'
+                                        }}>
+                                            {payment.paymentProof?.status?.toUpperCase()}
+                                        </span>
                                         {payment.ticketId && (
-                                            <p className="text-sm text-gray-600">
+                                            <p style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
                                                 Ticket: {payment.ticketId}
                                             </p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="mt-4 flex gap-4 items-center">
-                                    {payment.paymentProof?.data && (
-                                        <>
-                                            <img
-                                                src={payment.paymentProof.data}
-                                                alt="Payment Proof"
-                                                className="w-32 h-32 object-cover rounded border cursor-pointer"
-                                                onClick={() => setSelectedImage(payment.paymentProof.data)}
-                                            />
-                                            <button
-                                                onClick={() => setSelectedImage(payment.paymentProof.data)}
-                                                className="text-blue-600 hover:underline text-sm"
-                                            >
-                                                View Full Size
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-
+                                {/* Action Buttons */}
                                 {payment.paymentProof?.status === 'pending' && (
-                                    <div className="mt-4 flex gap-3">
+                                    <div style={{ marginTop: "20px", display: "flex", gap: "10px", paddingTop: "15px", borderTop: "1px solid #eee" }}>
                                         <button
                                             onClick={() => handleApprove(payment._id)}
-                                            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold"
+                                            style={{ padding: "10px 24px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
                                         >
-                                            Approve Payment
+                                            Approve
                                         </button>
                                         <button
                                             onClick={() => setShowRejectModal(payment._id)}
-                                            className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold"
+                                            style={{ padding: "10px 24px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
                                         >
-                                            Reject Payment
+                                            Reject
                                         </button>
                                     </div>
                                 )}
@@ -217,46 +213,44 @@ const PaymentApproval = () => {
             {/* Image Modal */}
             {selectedImage && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+                    style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
                     onClick={() => setSelectedImage(null)}
                 >
-                    <div className="max-w-4xl max-h-full">
-                        <img
-                            src={selectedImage}
-                            alt="Payment Proof Full Size"
-                            className="max-w-full max-h-screen object-contain"
-                        />
-                    </div>
+                    <img
+                        src={selectedImage}
+                        alt="Payment Proof"
+                        style={{ maxWidth: "90%", maxHeight: "90%", objectFit: "contain", borderRadius: "8px" }}
+                    />
                 </div>
             )}
 
             {/* Rejection Modal */}
             {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                        <h3 className="text-xl font-bold mb-4">Reject Payment</h3>
-                        <p className="text-gray-600 mb-4">
+                <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+                    <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "24px", maxWidth: "500px", width: "100%" }}>
+                        <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Reject Payment</h3>
+                        <p style={{ color: "#666", marginBottom: "16px", fontSize: "14px" }}>
                             Please provide a reason for rejecting this payment:
                         </p>
                         <textarea
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full border rounded p-3 mb-4 h-32"
+                            style={{ width: "100%", border: "1px solid #ddd", borderRadius: "4px", padding: "12px", height: "100px", fontSize: "14px", resize: "vertical" }}
                             placeholder="e.g., Invalid payment screenshot, incorrect amount..."
                         />
-                        <div className="flex gap-3 justify-end">
+                        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "20px" }}>
                             <button
                                 onClick={() => {
                                     setShowRejectModal(null);
                                     setRejectionReason('');
                                 }}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                style={{ padding: "8px 16px", backgroundColor: "#e0e0e0", border: "none", borderRadius: "4px", cursor: "pointer" }}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => handleReject(showRejectModal)}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                style={{ padding: "8px 16px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
                             >
                                 Confirm Reject
                             </button>

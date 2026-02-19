@@ -269,24 +269,6 @@ const MyEvents = () => {
                                         >
                                             View Ticket
                                         </button>
-                                        {registration.eventId?.status === 'Completed' && (
-                                            <button 
-                                                onClick={() => navigate(`/feedback/${registration.eventId?._id}`)}
-                                                style={{
-                                                    flex: 1,
-                                                    padding: "10px",
-                                                    backgroundColor: "#ffc107",
-                                                    color: "#000",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    fontSize: "14px",
-                                                    fontWeight: "bold"
-                                                }}
-                                            >
-                                                Give Feedback
-                                            </button>
-                                        )}
                                         <button 
                                             onClick={() => handleCancelRegistration(registration._id)}
                                             style={{
@@ -471,22 +453,40 @@ const MyEvents = () => {
                                     <div style={{ textAlign: "right" }}>
                                         {registration.ticketId && (
                                             <>
-                                                <button
-                                                    onClick={() => viewTicket(registration)}
-                                                    style={{
-                                                        padding: "8px 16px",
-                                                        backgroundColor: "#28a745",
-                                                        color: "white",
-                                                        border: "none",
-                                                        borderRadius: "4px",
-                                                        cursor: "pointer",
-                                                        fontSize: "13px",
-                                                        fontWeight: "bold",
-                                                        marginBottom: "10px"
-                                                    }}
-                                                >
-                                                    View Ticket
-                                                </button>
+                                                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                                                    <button
+                                                        onClick={() => viewTicket(registration)}
+                                                        style={{
+                                                            padding: "8px 16px",
+                                                            backgroundColor: "#28a745",
+                                                            color: "white",
+                                                            border: "none",
+                                                            borderRadius: "4px",
+                                                            cursor: "pointer",
+                                                            fontSize: "13px",
+                                                            fontWeight: "bold"
+                                                        }}
+                                                    >
+                                                        View Ticket
+                                                    </button>
+                                                    {registration.eventId?.status === 'Completed' && (
+                                                        <button
+                                                            onClick={() => navigate(`/feedback/${registration.eventId?._id}`)}
+                                                            style={{
+                                                                padding: "8px 16px",
+                                                                backgroundColor: "#ffc107",
+                                                                color: "#000",
+                                                                border: "none",
+                                                                borderRadius: "4px",
+                                                                cursor: "pointer",
+                                                                fontSize: "13px",
+                                                                fontWeight: "bold"
+                                                            }}
+                                                        >
+                                                            Give Feedback
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div style={{ 
                                                     fontSize: "12px", 
                                                     color: "#007bff", 

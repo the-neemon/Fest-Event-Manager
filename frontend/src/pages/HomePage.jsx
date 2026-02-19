@@ -20,6 +20,8 @@ const HomePage = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [paymentProofFile, setPaymentProofFile] = useState(null);
     const [paymentProofPreview, setPaymentProofPreview] = useState(null);
+    const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+    const [formResponses, setFormResponses] = useState({});
     const [participantProfile, setParticipantProfile] = useState(null);
     const { user, logoutUser, authTokens } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -110,14 +112,22 @@ const HomePage = () => {
     };
 
     const handleRegister = async (eventId, event) => {
+        setSelectedEvent(event);
+        
         // For events with registration fees, show payment modal
         if (event.registrationFee > 0) {
-            setSelectedEvent(event);
             setShowPaymentModal(true);
             return;
         }
 
-        // For free events, register directly
+        // Check if event has custom form fields
+        if (event.formFields && event.formFields.length > 0) {
+            setShowRegistrationModal(true);
+            setFormResponses({});
+            return;
+        }
+
+        // For free events without custom fields, register directly
         if (!confirm("Are you sure you want to register?")) return;
         
         try {
@@ -142,12 +152,54 @@ const HomePage = () => {
     const handlePaymentProofChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Check file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+                e.target.value = '';
+                return;
+            }
+            
+            // Check file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size is too large. Please upload an image smaller than 10MB.');
+                e.target.value = '';
+                return;
+            }
+            
             setPaymentProofFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPaymentProofPreview(reader.result);
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRegistrationSubmit = async () => {
+        // Validate required fields
+        const requiredFields = selectedEvent.formFields.filter(f => f.required);
+        for (const field of requiredFields) {
+            if (!formResponses[field.label] || formResponses[field.label].trim() === '') {
+                alert(`Please fill in the required field: ${field.label}`);
+                return;
+            }
+        }
+
+        try {
+            const response = await axios.post(
+                `${API_URL}/api/events/register/${selectedEvent._id}`,
+                { formResponses },
+                { headers: { "x-auth-token": authTokens.token } }
+            );
+
+            alert(`Success! You are registered. Ticket ID: ${response.data.ticketId}`);
+            setShowRegistrationModal(false);
+            setFormResponses({});
+            setSelectedEvent(null);
+            window.location.reload();
+        } catch (error) {
+            alert(error.response?.data?.msg || "Registration failed");
         }
     };
 
@@ -422,6 +474,143 @@ const HomePage = () => {
                     ))}
                 </div>
 
+                {/* Registration Modal with Custom Form Fields */}
+                {showRegistrationModal && selectedEvent && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                        overflowY: 'auto'
+                    }}>
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '30px',
+                            borderRadius: '8px',
+                            maxWidth: '600px',
+                            width: '90%',
+                            maxHeight: '80vh',
+                            overflowY: 'auto'
+                        }}>
+                            <h2 style={{ marginBottom: '20px' }}>Register for {selectedEvent.name}</h2>
+                            <p style={{ marginBottom: '20px', color: '#666' }}>Please fill out the registration form:</p>
+                            
+                            {selectedEvent.formFields.map((field, index) => (
+                                <div key={index} style={{ marginBottom: '20px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                                        {field.label}
+                                        {field.required && <span style={{ color: 'red' }}> *</span>}
+                                    </label>
+                                    
+                                    {field.fieldType === 'text' && (
+                                        <input
+                                            type="text"
+                                            value={formResponses[field.label] || ''}
+                                            onChange={(e) => setFormResponses({
+                                                ...formResponses,
+                                                [field.label]: e.target.value
+                                            })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '4px'
+                                            }}
+                                            required={field.required}
+                                        />
+                                    )}
+                                    
+                                    {field.fieldType === 'number' && (
+                                        <input
+                                            type="number"
+                                            value={formResponses[field.label] || ''}
+                                            onChange={(e) => setFormResponses({
+                                                ...formResponses,
+                                                [field.label]: e.target.value
+                                            })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '4px'
+                                            }}
+                                            required={field.required}
+                                        />
+                                    )}
+                                    
+                                    {field.fieldType === 'checkbox' && (
+                                        <div>
+                                            {field.options.split(',').map((option, optIndex) => (
+                                                <label key={optIndex} style={{ display: 'block', marginBottom: '8px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        value={option.trim()}
+                                                        checked={(formResponses[field.label] || '').split(',').includes(option.trim())}
+                                                        onChange={(e) => {
+                                                            const currentValues = formResponses[field.label] ? formResponses[field.label].split(',') : [];
+                                                            let newValues;
+                                                            if (e.target.checked) {
+                                                                newValues = [...currentValues, option.trim()];
+                                                            } else {
+                                                                newValues = currentValues.filter(v => v !== option.trim());
+                                                            }
+                                                            setFormResponses({
+                                                                ...formResponses,
+                                                                [field.label]: newValues.join(',')
+                                                            });
+                                                        }}
+                                                        style={{ marginRight: '8px' }}
+                                                    />
+                                                    {option.trim()}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '30px' }}>
+                                <button
+                                    onClick={() => {
+                                        setShowRegistrationModal(false);
+                                        setFormResponses({});
+                                        setSelectedEvent(null);
+                                    }}
+                                    style={{
+                                        padding: '10px 20px',
+                                        backgroundColor: '#6c757d',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRegistrationSubmit}
+                                    style={{
+                                        padding: '10px 20px',
+                                        backgroundColor: '#28a745',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Register
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Payment Proof Modal */}
                 {showPaymentModal && (
                     <div style={{
@@ -457,7 +646,7 @@ const HomePage = () => {
                                 </label>
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                                     onChange={handlePaymentProofChange}
                                     style={{
                                         padding: '10px',
@@ -466,6 +655,9 @@ const HomePage = () => {
                                         width: '100%'
                                     }}
                                 />
+                                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                                    Supported formats: JPEG, PNG, GIF, WebP (Max 10MB)
+                                </p>
                             </div>
 
                             {paymentProofPreview && (

@@ -7,7 +7,7 @@ const Event = require('../models/Event');
 const Participant = require('../models/Participant');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
-const { sendEmail } = require('../utils/emailService');
+const { sendTicketEmail } = require('../utils/emailService');
 
 router.get('/profile', auth, async (req, res) => {
     try {
@@ -133,27 +133,19 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
             await event.save();
         }
 
-        const emailContent = `
-            <h2>Payment Approved - Ticket Confirmation</h2>
-            <p>Dear ${registration.participantId.firstName},</p>
-            <p>Your payment for <strong>${event.name}</strong> has been approved!</p>
-            <p><strong>Ticket ID:</strong> ${ticketId}</p>
-            <p><strong>Event Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>
-            <p>Please find your ticket QR code attached. Show this at the event for entry.</p>
-            <img src="${qrCode}" alt="Ticket QR Code" style="display: block; margin: 20px 0;" />
-            <p>Thank you for your registration!</p>
-        `;
+        // Send ticket email (non-blocking - don't fail if email fails)
+        try {
+            await sendTicketEmail(registration.participantId, event, ticketId);
+        } catch (emailError) {
+            console.error('Failed to send ticket email:', emailError.message);
+            // Don't fail the request if email fails
+        }
 
-        await sendEmail(
-            registration.participantId.email,
-            `Payment Approved - ${event.name}`,
-            emailContent
-        );
-
-        res.json({ msg: "Payment approved and ticket sent", registration });
+        res.json({ msg: "Payment approved and ticket generated", registration });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
+        console.error('Error approving payment:', err.message);
+        console.error(err.stack);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 
@@ -187,24 +179,14 @@ router.put('/reject-payment/:registrationId', auth, async (req, res) => {
 
         await registration.save();
 
-        const emailContent = `
-            <h2>Payment Rejected</h2>
-            <p>Dear ${registration.participantId.firstName},</p>
-            <p>Unfortunately, your payment for <strong>${event.name}</strong> has been rejected.</p>
-            <p><strong>Reason:</strong> ${registration.paymentProof.rejectionReason}</p>
-            <p>Please upload a valid payment proof or contact the organizers for assistance.</p>
-        `;
-
-        await sendEmail(
-            registration.participantId.email,
-            `Payment Rejected - ${event.name}`,
-            emailContent
-        );
+        // Note: Email notification for rejection can be added later if needed
+        console.log(`Payment rejected for registration ${registration._id}`);
 
         res.json({ msg: "Payment rejected", registration });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
+        console.error('Error rejecting payment:', err.message);
+        console.error(err.stack);
+        res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
 

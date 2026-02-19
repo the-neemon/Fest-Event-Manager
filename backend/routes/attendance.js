@@ -15,17 +15,28 @@ router.post('/scan', auth, async (req, res) => {
 
         const { qrData, method } = req.body; // method: 'qr_scan' or 'file_upload'
 
+        console.log('QR Scan attempt - Raw data:', qrData);
+
         let parsedData;
         try {
             parsedData = JSON.parse(qrData);
+            console.log('Parsed QR data:', parsedData);
         } catch (err) {
+            console.error('QR parse error:', err);
             return res.status(400).json({ msg: "Invalid QR code format" });
         }
 
         const { ticketId, eventId, participantId } = parsedData;
 
+        console.log('Extracted fields:', { ticketId, eventId, participantId });
+
         if (!ticketId || !eventId || !participantId) {
-            return res.status(400).json({ msg: "Incomplete QR code data" });
+            console.error('Missing fields in QR data:', { ticketId, eventId, participantId });
+            return res.status(400).json({ 
+                msg: "Incomplete QR code data. Missing: " + 
+                    [!ticketId && 'ticketId', !eventId && 'eventId', !participantId && 'participantId']
+                    .filter(Boolean).join(', ')
+            });
         }
 
         const event = await Event.findById(eventId);

@@ -407,6 +407,16 @@ router.post('/register/:id', auth, async (req, res) => {
                 return res.status(400).json({ msg: "Payment proof is required for merchandise purchases" });
             }
             
+            // Validate base64 image format
+            if (!paymentProof.startsWith('data:image/')) {
+                return res.status(400).json({ msg: "Invalid payment proof format. Please upload a valid image file." });
+            }
+            
+            // Check file size (base64 string length, ~10MB limit)
+            if (paymentProof.length > 15000000) {
+                return res.status(400).json({ msg: "Payment proof file is too large. Please upload an image smaller than 10MB." });
+            }
+            
             registration.paymentProof = {
                 data: paymentProof,
                 uploadedAt: new Date(),
@@ -739,6 +749,36 @@ router.put('/:id/status', auth, async (req, res) => {
         res.json({ msg: "Status updated successfully", event });
     } catch (err) {
         console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// Get single event by ID (must be at the end to avoid route conflicts)
+router.get('/:id', auth, async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id)
+            .populate('organizerId', 'organizerName clubName');
+        
+        if (!event) {
+            return res.status(404).json({ msg: "Event not found" });
+        }
+
+        // Organizers can see their own events regardless of status
+        if (req.user.role === 'organizer' && event.organizerId._id.toString() === req.user.id) {
+            return res.json(event);
+        }
+
+        // Participants can only see Published/Ongoing/Completed events
+        if (['Published', 'Ongoing', 'Completed'].includes(event.status)) {
+            return res.json(event);
+        }
+
+        return res.status(403).json({ msg: "Access denied" });
+    } catch (err) {
+        console.error('Error fetching event:', err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: "Event not found" });
+        }
         res.status(500).send("Server Error");
     }
 });
