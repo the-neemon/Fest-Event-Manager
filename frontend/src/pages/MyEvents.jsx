@@ -171,9 +171,16 @@ const MyEvents = () => {
                                     <p style={{ margin: "8px 0" }}><strong>Type:</strong> {selectedTicket.eventId?.eventType}</p>
                                     <p style={{ margin: "8px 0" }}><strong>Start:</strong> {new Date(selectedTicket.eventId?.startDate).toLocaleString()}</p>
                                     <p style={{ margin: "8px 0" }}><strong>Location:</strong> {selectedTicket.eventId?.location || 'TBA'}</p>
-                                    {selectedTicket.eventId?.registrationFee > 0 && (
-                                        <p style={{ margin: "8px 0" }}><strong>Fee Paid:</strong> ₹{selectedTicket.eventId?.registrationFee}</p>
-                                    )}
+                                    {selectedTicket.eventId?.registrationFee > 0 && (() => {
+                                        const qty = Number(selectedTicket.formResponses?.Quantity) || 1;
+                                        const total = qty * selectedTicket.eventId.registrationFee;
+                                        return (
+                                            <p style={{ margin: "8px 0" }}>
+                                                <strong>Fee Paid:</strong> ₹{total}
+                                                {qty > 1 && ` (${qty} × ₹${selectedTicket.eventId.registrationFee})`}
+                                            </p>
+                                        );
+                                    })()
                                     {selectedTicket.formResponses && Object.keys(selectedTicket.formResponses).length > 0 && (
                                         <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f0f4ff", borderRadius: "6px" }}>
                                             {Object.entries(selectedTicket.formResponses).map(([key, val]) => (
