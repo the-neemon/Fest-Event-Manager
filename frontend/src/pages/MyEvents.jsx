@@ -180,7 +180,7 @@ const MyEvents = () => {
                                                 {qty > 1 && ` (${qty} × ₹${selectedTicket.eventId.registrationFee})`}
                                             </p>
                                         );
-                                    })()
+                                    })()}
                                     {selectedTicket.formResponses && Object.keys(selectedTicket.formResponses).length > 0 && (
                                         <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f0f4ff", borderRadius: "6px" }}>
                                             {Object.entries(selectedTicket.formResponses).map(([key, val]) => (
