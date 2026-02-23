@@ -43,7 +43,6 @@ router.post('/:eventId', auth, async (req, res) => {
             return res.status(400).json({ msg: "You have already submitted feedback for this event" });
         }
 
-        // Create feedback
         const feedback = new Feedback({
             eventId,
             participantId: req.user.id,
@@ -82,10 +81,9 @@ router.get('/event/:eventId', auth, async (req, res) => {
         }
 
         const feedbacks = await Feedback.find(query)
-            .select('rating comment submittedAt')
+            .select('rating comment submittedAt') // participantId intentionally excluded to preserve anonymity
             .sort({ submittedAt: -1 });
 
-        // Calculate statistics
         const allFeedbacks = await Feedback.find({ eventId });
         const totalFeedbacks = allFeedbacks.length;
         

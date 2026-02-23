@@ -35,6 +35,7 @@ const OnboardingPage = () => {
     };
 
     const handleOrganizerToggle = (organizerId) => {
+        // toggle: remove if already selected, append if not
         setSelectedOrganizers(prev => 
             prev.includes(organizerId) 
                 ? prev.filter(id => id !== organizerId)
@@ -58,7 +59,7 @@ const OnboardingPage = () => {
             );
             
             alert("Profile Updated!");
-            navigate("/my-events"); // Go to Dashboard
+            navigate("/my-events");
         } catch (error) {
             console.error(error);
             alert("Error updating profile.");
@@ -70,7 +71,6 @@ const OnboardingPage = () => {
             <h2>Welcome! Set up your preferences</h2>
             
             <form onSubmit={handleSubmit}>
-                {/* Interests Section */}
                 <div style={{ marginBottom: "30px" }}>
                     <h3>Select your interests:</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -86,7 +86,6 @@ const OnboardingPage = () => {
                     </div>
                 </div>
 
-                {/* Clubs/Organizers Section */}
                 <div style={{ marginBottom: "20px" }}>
                     <h3>Follow Clubs/Organizers:</h3>
                     <div style={{ maxHeight: "250px", overflowY: "auto", border: "1px solid #ddd", borderRadius: "5px", padding: "10px" }}>

@@ -24,6 +24,7 @@ const OrganizerProfile = () => {
             const res = await axios.get(`${API_URL}/api/organizer/profile`, {
                 headers: { "x-auth-token": authTokens.token }
             });
+            // API returns the full organizer document, shape matches formData so we set it directly
             setFormData(res.data);
             setLoading(false);
         } catch (err) {
@@ -112,6 +113,7 @@ const OrganizerProfile = () => {
                         />
                     </div>
 
+                    {/* webhook URL is stored on the organizer doc; backend POSTs to it when a new event is published */}
                     <div style={{ backgroundColor: "#f8f9fa", padding: "20px", borderRadius: "8px" }}>
                         <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Discord Webhook URL (Optional)</label>
                         <p style={{ fontSize: "13px", color: "#666", marginBottom: "10px" }}>

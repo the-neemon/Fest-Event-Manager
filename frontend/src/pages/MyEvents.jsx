@@ -16,22 +16,18 @@ const MyEvents = () => {
 
     const fetchData = async () => {
         try {
-            // Fetch upcoming events
+            // two separate endpoints: upcoming filters by future startDate, my-registrations returns full history
             const upcomingRes = await axios.get(`${API_URL}/api/events/my-registrations/upcoming`, {
                 headers: { "x-auth-token": authTokens.token }
             });
-            console.log("Upcoming registrations:", upcomingRes.data);
             setUpcomingEvents(upcomingRes.data);
 
-            // Fetch all registrations for history
             const allRes = await axios.get(`${API_URL}/api/events/my-registrations`, {
                 headers: { "x-auth-token": authTokens.token }
             });
-            console.log("All registrations:", allRes.data);
             setAllRegistrations(allRes.data);
         } catch (err) {
             console.error("Error fetching registrations:", err);
-            console.error("Error details:", err.response?.data);
         }
     };
 
@@ -88,7 +84,6 @@ const MyEvents = () => {
         <div>
             <Navbar />
             
-            {/* Ticket Modal */}
             {showTicketModal && selectedTicket && (
                 <div style={{
                     position: "fixed",
@@ -159,6 +154,7 @@ const MyEvents = () => {
                                     border: "2px solid #667eea",
                                     marginBottom: "15px"
                                 }}>
+                                    {/* uses a free third-party API for display only — scanning uses the backend-issued ticketId */}
                                     <img 
                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify({
                                             ticketId: selectedTicket.ticketId,
@@ -296,7 +292,7 @@ const MyEvents = () => {
                 <section>
                     <h2 style={{ borderBottom: "2px solid #007bff", paddingBottom: "10px" }}>Participation History</h2>
                     
-                    {/* Tabs */}
+                    {/* tab counts are computed inline from allRegistrations so they stay in sync without extra state */}
                     <div style={{ display: "flex", gap: "10px", marginTop: "20px", marginBottom: "20px", borderBottom: "1px solid #ddd" }}>
                         <button 
                             onClick={() => setActiveTab('all')}
@@ -390,7 +386,6 @@ const MyEvents = () => {
                         </button>
                     </div>
 
-                    {/* Registration Records */}
                     {filteredRegistrations.length === 0 ? (
                         <p style={{ color: "#666", fontStyle: "italic" }}>No records found in this category.</p>
                     ) : (

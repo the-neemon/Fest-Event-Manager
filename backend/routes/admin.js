@@ -55,7 +55,6 @@ router.post('/add-organizer', auth, async (req, res) => {
         });
 
         const salt = await bcrypt.genSalt(10);
-        const plainPassword = password; // Store for response
         organizer.password = await bcrypt.hash(password, salt);
 
         await organizer.save();
@@ -71,7 +70,7 @@ router.post('/add-organizer', auth, async (req, res) => {
             },
             credentials: {
                 email: contactEmail,
-                password: plainPassword // Send plain password only once for admin to share
+                password: password // plain password returned only once so admin can share it with the organizer
             }
         });
 

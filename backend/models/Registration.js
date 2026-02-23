@@ -33,7 +33,7 @@ const registrationSchema = new mongoose.Schema({
     },
     formResponses: {
         type: Map,
-        of: String
+        of: String // Map<fieldLabel, answer> - flexible storage for the event's dynamic formFields
     },
     paymentProof: {
         data: String, // base64 encoded image

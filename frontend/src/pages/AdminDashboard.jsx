@@ -25,7 +25,7 @@ const AdminDashboard = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Always auto-generate credentials
+            // autoGenerate: true tells backend to create email/password — admin never sets them manually
             const response = await axios.post(`${API_URL}/api/admin/add-organizer`, {
                 ...formData,
                 autoGenerate: true

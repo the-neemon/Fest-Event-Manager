@@ -13,11 +13,6 @@ try {
                 pass: process.env.EMAIL_PASS
             }
         });
-        console.log('Email service configured successfully with:', process.env.EMAIL_USER);
-    } else {
-        console.log('Email credentials not found in environment variables.');
-        console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not set');
-        console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'Not set');
     }
 } catch (error) {
     console.log('Error configuring email service:', error.message);
@@ -34,16 +29,14 @@ const generateQRCode = async (data) => {
 };
 
 // Send ticket email
-const sendTicketEmail = async (participant, event, ticketId, registrationId = null) => {
+const sendTicketEmail = async (participant, event, ticketId) => {
     try {
-        // Check if email service is configured
         if (!transporter) {
             console.log('Email service not configured. Skipping email send.');
             return false;
         }
 
-        // Generate QR code containing ticket information
-        // IMPORTANT: This format must match what the attendance scanner expects
+        // format must match what the attendance scanner expects (ticketId + eventId + participantId)
         const qrData = JSON.stringify({
             ticketId: ticketId,
             eventId: event._id.toString(),
@@ -54,7 +47,6 @@ const sendTicketEmail = async (participant, event, ticketId, registrationId = nu
         
         const qrCodeImage = await generateQRCode(qrData);
 
-        // Create email HTML
         const htmlContent = `
             <!DOCTYPE html>
             <html>
@@ -140,9 +132,9 @@ const sendTicketEmail = async (participant, event, ticketId, registrationId = nu
             html: htmlContent,
             attachments: [{
                 filename: 'ticket-qr.png',
-                content: qrCodeImage.split('base64,')[1],
+                content: qrCodeImage.split('base64,')[1], // strip the 'data:image/png;base64,' prefix, nodemailer expects raw base64
                 encoding: 'base64',
-                cid: 'qrcode' // Content ID for embedding in HTML
+                cid: 'qrcode' // cid lets the HTML reference this attachment inline via src="cid:qrcode"
             }]
         };
 

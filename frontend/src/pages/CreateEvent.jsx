@@ -11,7 +11,6 @@ const CreateEvent = () => {
 
     const [eventType, setEventType] = useState("Normal");
 
-    // Basic Data
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -22,25 +21,23 @@ const CreateEvent = () => {
         registrationLimit: 100,
         registrationFee: 0,
         location: "",
-        tags: "", // Comma separated string
+        tags: "",
         stock: 50,
         purchaseLimit: 1
     });
 
-    // Merchandise Specific State
     const [merchDetails, setMerchDetails] = useState({
         sizes: { S: false, M: false, L: false, XL: false },
-        colors: "" // Comma separated
+        colors: ""
     });
 
-    // Dynamic Form Builder State
+    // each question: { label, fieldType, required, options }
     const [customQuestions, setCustomQuestions] = useState([]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // --- Dynamic Form Logic ---
     const addQuestion = () => {
         setCustomQuestions([...customQuestions, { label: "", fieldType: "text", required: false, options: "" }]);
     };
@@ -55,7 +52,6 @@ const CreateEvent = () => {
         setCustomQuestions(customQuestions.filter((_, i) => i !== index));
     };
 
-    // --- Merch Logic ---
     const handleSizeChange = (e) => {
         setMerchDetails({
             ...merchDetails,
@@ -63,19 +59,18 @@ const CreateEvent = () => {
         });
     };
 
+    // default status is Draft; Publish button passes 'Published' explicitly
     const handleSubmit = async (e, status = 'Draft') => {
         e.preventDefault();
         try {
-            // Process Tags
             const tagArray = formData.tags.split(",").map(t => t.trim()).filter(t => t);
 
-            // Process custom questions - convert options string to array if needed
+            // options field only makes sense for checkbox type; clear it for others
             const processedQuestions = customQuestions.map(q => ({
                 ...q,
                 options: q.fieldType === 'checkbox' ? q.options : ''
             }));
 
-            // Process Merch Sizes
             const selectedSizes = Object.keys(merchDetails.sizes).filter(key => merchDetails.sizes[key]);
             const colorArray = merchDetails.colors.split(",").map(c => c.trim()).filter(c => c);
 
@@ -83,7 +78,7 @@ const CreateEvent = () => {
                 ...formData,
                 eventType,
                 tags: tagArray,
-                status,  // Add status field
+                status,
                 // Only attach if Normal
                 formFields: eventType === 'Normal' ? processedQuestions : [],
                 // Only attach if Merch
@@ -154,7 +149,6 @@ const CreateEvent = () => {
 
                 <hr />
 
-                {/* --- DYNAMIC SECTION FOR NORMAL EVENTS --- */}
                 {eventType === "Normal" && (
                     <div>
                         <h4>Event Details</h4>
@@ -210,7 +204,6 @@ const CreateEvent = () => {
                     </div>
                 )}
 
-                {/* --- DYNAMIC SECTION FOR MERCHANDISE --- */}
                 {eventType === "Merchandise" && (
                     <div>
                         <h4>Merchandise Details</h4>
@@ -238,6 +231,7 @@ const CreateEvent = () => {
                     </div>
                 )}
 
+                {/* type="button" prevents the form's implicit submit; status is passed explicitly instead */}
                 <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                     <button 
                         type="button"

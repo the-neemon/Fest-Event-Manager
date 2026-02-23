@@ -23,7 +23,7 @@ const participantSchema = new mongoose.Schema({
     },
     isIIITStudent: {
         type: Boolean,
-        default: false
+        default: false // used to gate 'IIIT Students Only' events at registration
     },
     participantType: { 
         type: String, 
@@ -39,7 +39,7 @@ const participantSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
-    followedOrganizers: [{
+    followedOrganizers: [{ // drives the 'followed clubs only' feed filter on the home page
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Organizer'
     }]

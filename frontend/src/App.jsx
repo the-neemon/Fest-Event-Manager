@@ -23,9 +23,9 @@ import FeedbackPage from "./pages/FeedbackPage";
 function App() {
   return (
     <Router>
+      {/* AuthProvider is inside Router so AuthContext can call useNavigate for post-login redirects */}
       <AuthProvider>
         <Routes>
-          {/* Use AuthPage for both paths */}
           <Route path="/" element={<AuthPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/register" element={<AuthPage />} /> 

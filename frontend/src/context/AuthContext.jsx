@@ -8,11 +8,11 @@ const AuthContext = createContext();
 export default AuthContext;
 
 export const AuthProvider = ({ children }) => {
+    // lazy initializer: runs once on mount, restores session from localStorage on page refresh
     const [user, setUser] = useState(() => {
         if (localStorage.getItem("authTokens")) {
-            // Restore user info from token on refresh
             let token = JSON.parse(localStorage.getItem("authTokens")).token;
-            return jwtDecode(token).user;
+            return jwtDecode(token).user; // extracts {id, role} from JWT payload
         }
         return null;
     });
@@ -40,13 +40,12 @@ export const AuthProvider = ({ children }) => {
                 setUser(decodedUser);
                 localStorage.setItem("authTokens", JSON.stringify(data));
                 
-                // --- UPDATED REDIRECT LOGIC ---
                 if (decodedUser.role === 'admin') {
                     navigate('/admin-dashboard');
                 } else if (decodedUser.role === 'organizer') {
                     navigate('/organizer-dashboard');
                 } else {
-                    // For participants, check if they have already set interests
+                    // hasInterests comes from the backend login response (not JWT) — drives onboarding redirect
                     if (data.hasInterests) {
                         navigate('/my-events');
                     } else {

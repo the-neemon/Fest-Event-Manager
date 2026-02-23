@@ -13,17 +13,16 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
     const [replyTo, setReplyTo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState(null);
-    const messagesEndRef = useRef(null);
     const pollIntervalRef = useRef(null);
 
     useEffect(() => {
         fetchMessages();
-        // Poll for new messages every 5 seconds
+        // ref instead of state so clearing the interval doesn't trigger a re-render
         pollIntervalRef.current = setInterval(() => {
             fetchMessages(true);
         }, 5000);
 
-        return () => {
+        return () => { // cleanup stops the poll when the component unmounts
             if (pollIntervalRef.current) {
                 clearInterval(pollIntervalRef.current);
             }
@@ -32,6 +31,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
 
     const fetchMessages = async (isPolling = false) => {
         try {
+            // on polling passes the timestamp of the newest known message so backend returns only newer ones
             const lastFetch = isPolling && messages.length > 0 
                 ? new Date(Math.max(...messages.map(m => new Date(m.createdAt)))).toISOString()
                 : null;
@@ -44,20 +44,18 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                 headers: { 'x-auth-token': authTokens.token }
             });
 
-            // Always deduplicate messages
+            // Map keyed by _id deduplicates in case of overlapping polls
             const uniqueMessages = Array.from(
                 new Map(res.data.map(msg => [msg._id, msg])).values()
             );
 
             if (isPolling && uniqueMessages.length > 0) {
-                // Only add messages that don't already exist
                 const existingIds = new Set(messages.map(m => m._id));
                 const newMessages = uniqueMessages.filter(msg => !existingIds.has(msg._id));
                 
                 if (newMessages.length > 0) {
                     setMessages(prev => {
                         const combined = [...newMessages, ...prev];
-                        // Deduplicate the combined array too
                         return Array.from(new Map(combined.map(msg => [msg._id, msg])).values());
                     });
                     showNotification(`${newMessages.length} new message(s)`);
@@ -94,7 +92,6 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
             );
 
             if (replyTo) {
-                // Update the specific message with new reply
                 setMessages(prev => prev.map(msg => 
                     msg._id === replyTo._id 
                         ? { ...msg, replies: [...(msg.replies || []), res.data], replyCount: (msg.replyCount || 0) + 1 }

@@ -2,7 +2,7 @@ import { API_URL } from "../config";
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
-import Navbar from "../components/Navbar"; // Import Navbar
+import Navbar from "../components/Navbar";
 
 const ProfilePage = () => {
     const { authTokens } = useContext(AuthContext);
@@ -32,7 +32,6 @@ const ProfilePage = () => {
 
     const availableInterests = ["Technical", "Cultural", "Sports"];
 
-    // Fetch current profile data
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -49,7 +48,6 @@ const ProfilePage = () => {
         fetchProfile();
     }, [authTokens]);
 
-    // Fetch all organizers for club selection
     useEffect(() => {
         const fetchOrganizers = async () => {
             try {
@@ -62,12 +60,10 @@ const ProfilePage = () => {
         fetchOrganizers();
     }, []);
 
-    // Handle text input changes
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle interest toggle
     const toggleInterest = (interest) => {
         const currentInterests = formData.interests || [];
         const updatedInterests = currentInterests.includes(interest)
@@ -76,9 +72,9 @@ const ProfilePage = () => {
         setFormData({ ...formData, interests: updatedInterests });
     };
 
-    // Handle club toggle
     const toggleClub = (organizerId) => {
         const currentClubs = formData.followedOrganizers || [];
+        // after a GET, followedOrganizers contains populated objects; normalize to IDs before toggling
         const clubIds = currentClubs.map(c => typeof c === 'object' ? c._id : c);
         
         const updatedClubs = clubIds.includes(organizerId)
@@ -98,7 +94,7 @@ const ProfilePage = () => {
             alert("Profile Updated Successfully!");
             setEditingInterests(false);
             setEditingClubs(false);
-            
+            // re-fetch so followedOrganizers is populated (objects with names), not just raw IDs
             const res = await axios.get(`${API_URL}/api/auth/profile`, {
                 headers: { "x-auth-token": authTokens.token }
             });
@@ -109,7 +105,6 @@ const ProfilePage = () => {
         }
     };
 
-    // Handle password change
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         
@@ -146,18 +141,18 @@ const ProfilePage = () => {
 
     if (loading) return <div style={{padding: "20px"}}>Loading...</div>;
 
+    // normalize populated docs to plain IDs for checkbox comparison in the edit view
     const followedClubIds = (formData.followedOrganizers || []).map(c => typeof c === 'object' ? c._id : c);
 
     return (
         <div>
-            <Navbar /> {/* Navigation Bar */}
+            <Navbar />
             
             <div style={{ maxWidth: "600px", margin: "20px auto", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
                 <h2>My Profile</h2>
                 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                     
-                    {/* Read-Only Fields */}
                     <div style={{ backgroundColor: "#f8f9fa", padding: "10px", borderRadius: "5px" }}>
                         <label style={{fontSize: "12px", color: "gray"}}>Email</label>
                         <div style={{fontWeight: "bold"}}>{formData.email}</div>
@@ -168,7 +163,6 @@ const ProfilePage = () => {
                         <div style={{fontWeight: "bold"}}>{formData.isIIITStudent ? "IIIT Student" : "Non-IIIT"}</div>
                     </div>
 
-                    {/* Editable Interests Section */}
                     <div style={{ backgroundColor: "#f8f9fa", padding: "10px", borderRadius: "5px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                             <label style={{fontSize: "12px", color: "gray"}}>Interests</label>
@@ -203,7 +197,6 @@ const ProfilePage = () => {
                         )}
                     </div>
 
-                    {/* Editable Followed Clubs Section */}
                     <div style={{ backgroundColor: "#f8f9fa", padding: "10px", borderRadius: "5px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                             <label style={{fontSize: "12px", color: "gray"}}>Followed Clubs</label>
@@ -266,7 +259,6 @@ const ProfilePage = () => {
                     </button>
                 </form>
 
-                {/* Security Settings Section */}
                 <div style={{ marginTop: "30px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#fff" }}>
                     <h3 style={{ marginBottom: "15px" }}>Security Settings</h3>
                     

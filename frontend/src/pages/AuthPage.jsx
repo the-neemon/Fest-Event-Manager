@@ -2,17 +2,13 @@ import { API_URL } from "../config";
 import { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
-    // State to toggle between Login and Register views
     const [isLogin, setIsLogin] = useState(true);
     
-    // Auth Context for Login logic
     const { loginUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Form State (Handles both forms)
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -29,18 +25,16 @@ const AuthPage = () => {
         setFormData(prev => {
             const newData = { ...prev, [name]: type === "checkbox" ? checked : value };
             if (name === "isIIITStudent") {
+                // auto-fill college name so IIIT students don't need to type it
                 newData.collegeName = checked ? "IIIT Hyderabad" : "";
             }
             return newData;
         });
     };
 
-    // --- LOGIN HANDLER ---
     const handleLogin = async (e) => {
         e.preventDefault();
-        const success = await loginUser(formData.email, formData.password);
-        if (success) {
-        }
+        await loginUser(formData.email, formData.password);
     };
 
     const handleRegister = async (e) => {
@@ -48,7 +42,7 @@ const AuthPage = () => {
         try {
             await axios.post(`${API_URL}/api/auth/register`, formData);
             alert("Registration Successful! Please Login.");
-            setIsLogin(true); // Switch back to Login view
+            setIsLogin(true);
         } catch (error) {
             alert("Error: " + (error.response?.data?.msg || "Registration Failed"));
         }
@@ -74,7 +68,6 @@ const AuthPage = () => {
     return (
         <div style={{ maxWidth: "400px", margin: "50px auto", padding: "30px", border: "1px solid #ddd", borderRadius: "8px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
             
-            {/* Toggle Header */}
             <div style={{ display: "flex", marginBottom: "20px", borderBottom: "1px solid #ccc" }}>
                 <button 
                     onClick={() => setIsLogin(true)} 
@@ -92,7 +85,6 @@ const AuthPage = () => {
 
             <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
 
-            {/* LOGIN FORM */}
             {isLogin ? (
                 <>
                     <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
@@ -101,7 +93,6 @@ const AuthPage = () => {
                         <button type="submit" style={{ padding: "10px", backgroundColor: "#007bff", color: "white", border: "none", cursor: "pointer" }}>Login</button>
                     </form>
                     
-                    {/* Password Reset Request Link */}
                     <div style={{ marginTop: "15px", textAlign: "center" }}>
                         <button 
                             onClick={handlePasswordResetRequest}
@@ -119,7 +110,6 @@ const AuthPage = () => {
                     </div>
                 </>
             ) : (
-                /* REGISTER FORM SECTION */
                 <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     
                     <div style={{ display: "flex", gap: "10px" }}>

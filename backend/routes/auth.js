@@ -3,14 +3,13 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// Import all models
 const Participant = require('../models/Participant');
 const Organizer = require('../models/Organizer');
 const Admin = require('../models/Admin');
 const PasswordResetRequest = require('../models/PasswordResetRequest');
 const auth = require('../middleware/auth');
 
-// POST register - IIIT email validation for IIIT students
+// checks email domain to enforce the isIIITStudent flag is not self-declared falsely
 router.post('/register', async (req, res) => {
     try {
         const { firstName, lastName, email, password, isIIITStudent, participantType, collegeName, contactNumber } = req.body;
@@ -59,7 +58,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// POST login - checks all three user collections (Participant, Organizer, Admin)
+// single login endpoint for all three roles - role is embedded in the JWT payload
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -98,7 +97,7 @@ router.post('/login', async (req, res) => {
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5d' }, (err, token) => {
             if (err) throw err;
             
-            // For participants, check if they have interests set
+            // hasInterests drives whether frontend redirects new participants to the onboarding page
             const hasInterests = role === 'participant' && user.interests && user.interests.length > 0;
             
             res.json({ token, role, hasInterests });
@@ -263,7 +262,6 @@ router.get('/profile', async (req, res) => {
 
         let user = null;
 
-        // Fetch based on role
         if (userRole === 'participant') {
             user = await Participant.findById(userId).select('-password').populate('followedOrganizers', 'organizerName');
         } else if (userRole === 'organizer') {
@@ -310,13 +308,13 @@ router.put('/profile', async (req, res) => {
                 { new: true }
             ).select('-password');
         } else if (userRole === 'organizer') {
-            // Organizers might have different fields
+            // organizer profile update maps firstName -> organizerName (frontend reuses the same form)
             user = await Organizer.findByIdAndUpdate(
                 userId,
                 { 
-                    organizerName: firstName, // Adjust field names as needed
+                    organizerName: firstName,
                     contactNumber,
-                    description: collegeName // Or other relevant fields
+                    description: collegeName
                 },
                 { new: true }
             ).select('-password');
@@ -351,7 +349,6 @@ router.post('/request-password-reset', async (req, res) => {
             return res.status(400).json({ msg: "You already have a pending password reset request" });
         }
 
-        // Create new request
         const request = new PasswordResetRequest({
             organizer: organizer._id,
             reason: reason || 'Forgot password'
@@ -377,7 +374,6 @@ router.put('/change-password', async (req, res) => {
 
         const { currentPassword, newPassword } = req.body;
 
-        // Validation
         if (!currentPassword || !newPassword) {
             return res.status(400).json({ msg: "Please provide current and new password" });
         }
@@ -400,13 +396,11 @@ router.put('/change-password', async (req, res) => {
             return res.status(404).json({ msg: "User not found" });
         }
 
-        // Verify current password
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(400).json({ msg: "Current password is incorrect" });
         }
 
-        // Hash new password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
 

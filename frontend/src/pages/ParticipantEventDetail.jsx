@@ -23,11 +23,12 @@ const ParticipantEventDetail = () => {
             const res = await axios.get(`${API_URL}/api/events/my-registrations`, {
                 headers: { "x-auth-token": authTokens.token }
             });
+            // finds this event's registration client-side; eventId is populated by the backend (no separate event fetch)
             const reg = res.data.find(r => r.eventId._id === eventId);
             
             if (reg && reg.eventId) {
                 setRegistration(reg);
-                setEvent(reg.eventId); // Get event data from registration
+                setEvent(reg.eventId);
                 setLoading(false);
             } else {
                 alert("Event not found or you're not registered");
@@ -97,10 +98,7 @@ const ParticipantEventDetail = () => {
                         </div>
                         {registration && registration.ticketId && (
                             <button
-                                onClick={() => {
-                                    // Show ticket modal or navigate to ticket view
-                                    navigate("/my-events");
-                                }}
+                                onClick={() => navigate("/my-events")}
                                 style={{
                                     padding: "10px 20px",
                                     backgroundColor: "#28a745",
@@ -206,7 +204,7 @@ const ParticipantEventDetail = () => {
                     )}
                 </div>
 
-                {/* Discussion Forum */}
+                {/* isOrganizer=false hides moderation controls (delete/pin) inside the forum component */}
                 {registration && <DiscussionForum eventId={eventId} isOrganizer={false} />}
                 
                 {!registration && (

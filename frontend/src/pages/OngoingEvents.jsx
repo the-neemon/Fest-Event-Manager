@@ -81,6 +81,7 @@ const OngoingEvents = () => {
                                     {event.eventType}
                                 </span>
 
+                                {/* truncate description to keep cards uniform height */}
                                 <p style={{ fontSize: "14px", color: "#666", marginBottom: "15px" }}>
                                     {event.description.substring(0, 120)}...
                                 </p>
@@ -89,6 +90,7 @@ const OngoingEvents = () => {
                                     <div><strong>Started:</strong> {new Date(event.startDate).toLocaleString()}</div>
                                     <div><strong>Ends:</strong> {new Date(event.endDate).toLocaleString()}</div>
                                     <div><strong>Location:</strong> {event.location || "TBA"}</div>
+                                    {/* participants may not be populated if none registered — optional chaining guards undefined */}
                                     <div><strong>Participants:</strong> {event.participants?.length || 0} / {event.registrationLimit}</div>
                                 </div>
 

@@ -27,7 +27,7 @@ const PasswordResetRequests = () => {
         fetchRequests();
     }, []);
 
-    const handleApprove = async (requestId, organizerId, organizerName) => {
+    const handleApprove = async (requestId, organizerName) => {
         if (!confirm(`Generate new password for "${organizerName}"?`)) return;
 
         try {
@@ -37,10 +37,11 @@ const PasswordResetRequests = () => {
                 { headers: { "x-auth-token": authTokens.token } }
             );
 
+            // backend generates a random password, stores the hash, and returns plaintext once
             const newPassword = response.data.newPassword;
             alert(`New password for ${organizerName}:\n\n${newPassword}\n\nPlease share this with the organizer. This will not be shown again.`);
             
-            fetchRequests(); // Refresh list
+            fetchRequests();
         } catch (error) {
             console.error("Error approving request:", error);
             alert(error.response?.data?.msg || "Failed to approve request");
@@ -56,7 +57,7 @@ const PasswordResetRequests = () => {
                 { headers: { "x-auth-token": authTokens.token } }
             );
             alert("Request rejected successfully");
-            fetchRequests(); // Refresh list
+            fetchRequests();
         } catch (error) {
             console.error("Error rejecting request:", error);
             alert(error.response?.data?.msg || "Failed to reject request");
@@ -113,8 +114,7 @@ const PasswordResetRequests = () => {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "120px" }}>
                                     <button
                                         onClick={() => handleApprove(
-                                            request._id, 
-                                            request.organizer?._id,
+                                            request._id,
                                             request.organizer?.organizerName
                                         )}
                                         style={{

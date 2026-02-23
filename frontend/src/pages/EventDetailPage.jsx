@@ -53,7 +53,7 @@ const EventDetailPage = () => {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Event published successfully!");
-            fetchEventDetails(); // Refresh to show updated status
+            fetchEventDetails();
         } catch (err) {
             alert(err.response?.data?.msg || "Failed to publish event");
         }
@@ -137,6 +137,7 @@ const EventDetailPage = () => {
 
     const registrationCount = participants.length;
     const attendanceCount = participants.filter(p => p.attendance?.marked).length;
+    // naive estimate: counts all registrations regardless of payment approval status
     const revenue = registrationCount * (event.registrationFee || 0);
 
     return (
@@ -223,6 +224,7 @@ const EventDetailPage = () => {
                                         </button>
                                     )}
                                     {(event.status === 'Published' || event.status === 'Ongoing') && (
+                                        // manual override — complements the server's 60s auto-updater
                                         <select onChange={(e) => handleStatusChange(e.target.value)} value={event.status} style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ddd", cursor: "pointer" }}>
                                             <option value="Published">Published</option>
                                             <option value="Ongoing">Ongoing</option>

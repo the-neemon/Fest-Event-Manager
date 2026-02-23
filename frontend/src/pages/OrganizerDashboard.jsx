@@ -21,7 +21,7 @@ const OrganizerDashboard = () => {
             const res = await axios.get(`${API_URL}/api/events/my-events`, {
                 headers: { "x-auth-token": authTokens.token }
             });
-            // Auto-mark as completed if end date passed
+            // client-side patch: backend auto-updates every 60s but this ensures correct status on the very first fetch
             const updatedEvents = res.data.map(event => {
                 const now = new Date();
                 const endDate = new Date(event.endDate);
@@ -47,6 +47,7 @@ const OrganizerDashboard = () => {
         }
     };
 
+    // lookup object instead of an if-chain; returns grey as default for unknown statuses
     const getStatusColor = (status) => {
         const colors = {
             'Draft': '#6c757d',

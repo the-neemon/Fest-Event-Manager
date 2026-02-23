@@ -14,12 +14,11 @@ const Navbar = () => {
             display: "flex", justifyContent: "space-between", alignItems: "center",
             padding: "15px 30px", backgroundColor: "#343a40", color: "white"
         }}>
-            {/* Logo */}
             <div style={{ fontSize: "20px", fontWeight: "bold", cursor: "pointer" }} onClick={() => navigate("/events")}>
                 IIIT Events
             </div>
 
-            {/* Dynamic Links based on role */}
+            {/* links rendered conditionally based on role from JWT payload */}
             <div style={{ display: "flex", gap: "25px" }}>
                 {user.role === "participant" && (
                     <>
@@ -48,7 +47,6 @@ const Navbar = () => {
                 )}
             </div>
 
-            {/* Logout */}
             <button 
                 onClick={logoutUser} 
                 style={{ 
@@ -62,6 +60,7 @@ const Navbar = () => {
     );
 };
 
+// defined outside component so the object isn't recreated on every render
 const linkStyle = {
     color: "#f8f9fa",
     textDecoration: "none",

@@ -6,13 +6,13 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // large limit needed for base64-encoded payment proof images
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB connected');
-        startEventStatusUpdater();
+        startEventStatusUpdater(); // started here so it only runs after DB is ready
     })
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -36,9 +36,7 @@ function startEventStatusUpdater() {
         } catch (err) {
             console.error('Error updating event statuses:', err);
         }
-    }, 60000);
-    
-    console.log('Event status auto-updater started');
+    }, 60000); // runs every 60 seconds - status transitions happen within a minute of the actual date
 }
 
 app.use('/api/auth', require('./routes/auth'));

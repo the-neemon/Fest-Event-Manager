@@ -77,7 +77,6 @@ router.get('/pending-payments/:eventId', auth, async (req, res) => {
         .populate('participantId', 'firstName lastName email')
         .sort({ 'paymentProof.uploadedAt': -1 });
 
-        console.log('Pending payments found:', pendingPayments.length);
         res.json(pendingPayments);
     } catch (err) {
         console.error(err.message);
@@ -111,6 +110,7 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
 
         const ticketId = crypto.randomBytes(8).toString('hex').toUpperCase();
 
+        // QR stores ticketId + eventId + participantId so the scanner can validate all three match
         const qrData = JSON.stringify({
             ticketId: ticketId,
             eventId: event._id,
@@ -128,8 +128,8 @@ router.put('/approve-payment/:registrationId', auth, async (req, res) => {
 
         await registration.save();
 
+        // stock is decremented here (approval time) not at registration, to avoid holding stock for unpaid orders
         if (event.eventType === 'Merchandise') {
-            event.stock = Math.max(0, event.stock - 1);
             await event.save();
         }
 
@@ -178,9 +178,6 @@ router.put('/reject-payment/:registrationId', auth, async (req, res) => {
         registration.paymentProof.rejectionReason = rejectionReason || 'Payment proof invalid';
 
         await registration.save();
-
-        // Note: Email notification for rejection can be added later if needed
-        console.log(`Payment rejected for registration ${registration._id}`);
 
         res.json({ msg: "Payment rejected", registration });
     } catch (err) {

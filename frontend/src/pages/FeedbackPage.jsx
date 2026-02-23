@@ -22,8 +22,10 @@ const FeedbackPage = () => {
     const [hasSubmitted, setHasSubmitted] = useState(false);
     const [hoveredRating, setHoveredRating] = useState(0);
 
+    // same page serves two completely different views depending on role
     const isOrganizer = user?.role === 'organizer';
 
+    // ratingFilter in deps so the organizer list re-fetches whenever the filter changes
     useEffect(() => {
         fetchEventDetails();
         if (isOrganizer) {
@@ -35,6 +37,7 @@ const FeedbackPage = () => {
 
     const fetchEventDetails = async () => {
         try {
+            // organizer uses /detail/ which returns organizer-only fields; participant uses the public endpoint
             const endpoint = isOrganizer 
                 ? `${API_URL}/api/events/detail/${eventId}`
                 : `${API_URL}/api/events/${eventId}`;
@@ -69,7 +72,7 @@ const FeedbackPage = () => {
             const res = await axios.get(`${API_URL}/api/feedback/check/${eventId}`, {
                 headers: { "x-auth-token": authTokens.token }
             });
-            setHasSubmitted(res.data.hasSubmitted);
+            setHasSubmitted(res.data.hasSubmitted); // early UI guard — DB unique index is the real enforcement
         } catch (err) {
             console.error("Error checking feedback:", err);
         }
@@ -117,6 +120,7 @@ const FeedbackPage = () => {
         }
     };
 
+    // interactive=true → clickable input for submission; false → read-only display
     const renderStars = (currentRating, interactive = false) => {
         return (
             <div style={{ display: 'flex', gap: '5px' }}>
@@ -128,6 +132,7 @@ const FeedbackPage = () => {
                         onMouseLeave={() => interactive && setHoveredRating(0)}
                         style={{
                             fontSize: interactive ? '36px' : '24px',
+                            // hoveredRating takes priority to show hover preview; falls back to committed rating
                             color: star <= (interactive ? (hoveredRating || rating) : currentRating) ? '#ffc107' : '#ddd',
                             cursor: interactive ? 'pointer' : 'default',
                             transition: 'color 0.2s'

@@ -13,7 +13,7 @@ const PaymentApproval = () => {
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
-    const [showRejectModal, setShowRejectModal] = useState(null);
+    const [showRejectModal, setShowRejectModal] = useState(null); // stores registrationId to reject; null = modal closed
     const [filterStatus, setFilterStatus] = useState('all');
 
     useEffect(() => {
@@ -22,18 +22,14 @@ const PaymentApproval = () => {
 
     const fetchPayments = async () => {
         try {
-            console.log('Fetching payments for event:', eventId);
-            console.log('Token exists:', !!authTokens?.token);
             const res = await axios.get(
                 `${API_URL}/api/organizer/pending-payments/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
             );
-            console.log('Payments received:', res.data);
             setPayments(res.data);
             setLoading(false);
         } catch (err) {
             console.error('Error fetching payments:', err);
-            console.error('Error response:', err.response?.data);
             setLoading(false);
         }
     };
@@ -75,6 +71,7 @@ const PaymentApproval = () => {
         }
     };
 
+    // client-side filter — switching tabs doesn't trigger a new fetch
     const filteredPayments = filterStatus === 'all' 
         ? payments 
         : payments.filter(p => p.paymentProof?.status === filterStatus);
@@ -104,7 +101,6 @@ const PaymentApproval = () => {
                     </button>
                 </div>
 
-                {/* Filter Tabs */}
                 <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #ddd", paddingBottom: "10px" }}>
                     {['all', 'pending', 'approved', 'rejected'].map(status => (
                         <button
@@ -135,7 +131,6 @@ const PaymentApproval = () => {
                         {filteredPayments.map((payment) => (
                             <div key={payment._id} style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px" }}>
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "20px", alignItems: "start" }}>
-                                    {/* Participant Info */}
                                     <div>
                                         <h3 style={{ fontSize: "18px", fontWeight: "600", margin: "0 0 8px 0" }}>
                                             {payment.participantId?.firstName} {payment.participantId?.lastName}
@@ -156,7 +151,7 @@ const PaymentApproval = () => {
                                         )}
                                     </div>
 
-                                    {/* Payment Proof Thumbnail */}
+                                    {/* paymentProof.data is the base64 image stored in MongoDB; click opens full-size lightbox */}
                                     {payment.paymentProof?.data && (
                                         <img
                                             src={payment.paymentProof.data}
@@ -166,7 +161,6 @@ const PaymentApproval = () => {
                                         />
                                     )}
 
-                                    {/* Status and Ticket */}
                                     <div style={{ textAlign: "right" }}>
                                         <span style={{
                                             display: "inline-block",
@@ -187,7 +181,6 @@ const PaymentApproval = () => {
                                     </div>
                                 </div>
 
-                                {/* Action Buttons */}
                                 {payment.paymentProof?.status === 'pending' && (
                                     <div style={{ marginTop: "20px", display: "flex", gap: "10px", paddingTop: "15px", borderTop: "1px solid #eee" }}>
                                         <button
@@ -210,7 +203,6 @@ const PaymentApproval = () => {
                 )}
             </div>
 
-            {/* Image Modal */}
             {selectedImage && (
                 <div 
                     style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
@@ -224,7 +216,6 @@ const PaymentApproval = () => {
                 </div>
             )}
 
-            {/* Rejection Modal */}
             {showRejectModal && (
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
                     <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "24px", maxWidth: "500px", width: "100%" }}>

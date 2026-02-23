@@ -27,6 +27,7 @@ const ManageOrganizers = () => {
         }
     };
 
+    // currentStatus is organizer.disabled; flips to opposite action label and sends same endpoint either way
     const handleDisable = async (id, currentStatus) => {
         const action = currentStatus ? "enable" : "disable";
         if (!confirm(`Are you sure you want to ${action} this organizer?`)) return;
@@ -79,7 +80,7 @@ const ManageOrganizers = () => {
                                     border: "1px solid #ddd", 
                                     borderRadius: "8px", 
                                     padding: "20px", 
-                                    backgroundColor: organizer.disabled ? "#f8d7da" : "#fff",
+                                    backgroundColor: organizer.disabled ? "#f8d7da" : "#fff", // red tint signals disabled state at a glance
                                     display: "flex",
                                     justifyContent: "space-between",
                                     alignItems: "center"

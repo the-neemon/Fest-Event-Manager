@@ -9,7 +9,7 @@ const messageSchema = new mongoose.Schema({
     authorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: 'authorModel'
+        refPath: 'authorModel' // dynamic ref - Mongoose populates from Participant or Organizer based on authorModel value
     },
     authorModel: {
         type: String,
@@ -32,7 +32,7 @@ const messageSchema = new mongoose.Schema({
     parentMessageId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Message',
-        default: null
+        default: null // null = top-level post; non-null = reply (self-referential)
     },
     reactions: [{
         userId: {

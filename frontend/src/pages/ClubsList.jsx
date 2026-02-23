@@ -42,7 +42,7 @@ const ClubsList = () => {
                 headers: { "x-auth-token": authTokens.token }
             });
             alert("Successfully followed!");
-            fetchFollowedOrganizers();
+            fetchFollowedOrganizers(); // re-fetch to keep followedOrganizers list in sync
         } catch (error) {
             console.error("Follow error:", error);
             alert(error.response?.data?.msg || "Failed to follow");
@@ -62,6 +62,7 @@ const ClubsList = () => {
         }
     };
 
+    // derived check — avoids storing follow state as a separate boolean per club
     const isFollowing = (organizerId) => {
         return followedOrganizers.some(id => id === organizerId);
     };

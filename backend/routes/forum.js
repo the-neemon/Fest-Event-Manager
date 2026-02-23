@@ -4,8 +4,6 @@ const auth = require('../middleware/auth');
 const Message = require('../models/Message');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
-const Participant = require('../models/Participant');
-const Organizer = require('../models/Organizer');
 
 // GET forum messages - supports incremental loading via lastFetch query param
 router.get('/:eventId/messages', auth, async (req, res) => {
@@ -40,6 +38,7 @@ router.get('/:eventId/messages', auth, async (req, res) => {
         };
 
         if (lastFetch) {
+            // incremental load - frontend polls every 5s and sends timestamp of last known message
             query.createdAt = { $gt: new Date(lastFetch) };
         }
 
@@ -51,6 +50,7 @@ router.get('/:eventId/messages', auth, async (req, res) => {
             })
             .lean();
 
+        // Promise.all fetches replies for all messages in parallel instead of sequentially
         const messagesWithReplies = await Promise.all(messages.map(async (msg) => {
             const replies = await Message.find({
                 eventId,
@@ -102,7 +102,6 @@ router.post('/:eventId/messages', auth, async (req, res) => {
             if (!registration) {
                 return res.status(403).json({ msg: "You must be registered for this event to post" });
             }
-            // Participants can't post announcements
             if (isAnnouncement) {
                 return res.status(403).json({ msg: "Only organizers can post announcements" });
             }
@@ -117,7 +116,7 @@ router.post('/:eventId/messages', auth, async (req, res) => {
             authorId: req.user.id,
             authorModel: req.user.role === 'participant' ? 'Participant' : 'Organizer',
             content: content.trim(),
-            isAnnouncement: isAnnouncement && req.user.role === 'organizer',
+            isAnnouncement: isAnnouncement && req.user.role === 'organizer', // double-guard so even if frontend sends isAnnouncement=true for a participant, it's ignored
             parentMessageId: parentMessageId || null
         });
 
@@ -157,10 +156,8 @@ router.put('/messages/:messageId/react', auth, async (req, res) => {
         );
 
         if (existingReactionIndex > -1) {
-            // Remove reaction
-            message.reactions.splice(existingReactionIndex, 1);
+            message.reactions.splice(existingReactionIndex, 1); // toggle: same emoji again = remove
         } else {
-            // Add reaction
             message.reactions.push({
                 userId: req.user.id,
                 userModel: req.user.role === 'participant' ? 'Participant' : 'Organizer',
@@ -233,7 +230,7 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
             return res.status(403).json({ msg: "Not authorized" });
         }
 
-        message.isDeleted = true;
+        message.isDeleted = true; // soft delete - message stays in DB but is filtered out on fetch
         await message.save();
 
         // Also soft delete all replies

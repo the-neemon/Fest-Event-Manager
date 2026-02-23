@@ -18,6 +18,7 @@ const OrganizerDetailPage = () => {
 
     const fetchOrganizerDetails = async () => {
         try {
+            // single endpoint returns organizer info + events already split into upcoming/past by the backend
             const res = await axios.get(`${API_URL}/api/auth/organizer/${organizerId}`);
             setOrganizer(res.data.organizer);
             setUpcomingEvents(res.data.upcomingEvents);
@@ -52,6 +53,7 @@ const OrganizerDetailPage = () => {
                     </span>
                     <p style={{ marginTop: "15px", fontSize: "16px", color: "#333" }}>{organizer.description || "No description available."}</p>
                     <p style={{ marginTop: "10px", fontSize: "14px", color: "#555" }}>
+                        {/* contactEmail is set during onboarding; falls back to login email if not provided */}
                         <strong>Contact Email:</strong> {organizer.contactEmail || organizer.email}
                     </p>
                 </div>

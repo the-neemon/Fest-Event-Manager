@@ -25,7 +25,7 @@ const FeedbackSchema = new mongoose.Schema({
     },
     isAnonymous: {
         type: Boolean,
-        default: true
+        default: true // participant identity is never revealed to the organizer by default
     },
     submittedAt: {
         type: Date,
@@ -35,7 +35,7 @@ const FeedbackSchema = new mongoose.Schema({
     timestamps: true
 });
 
-FeedbackSchema.index({ eventId: 1, participantId: 1 }, { unique: true });
+FeedbackSchema.index({ eventId: 1, participantId: 1 }, { unique: true }); // prevents a participant from submitting feedback twice for the same event
 FeedbackSchema.index({ eventId: 1, rating: 1 });
 
 module.exports = mongoose.model('Feedback', FeedbackSchema);

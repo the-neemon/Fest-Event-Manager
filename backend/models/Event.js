@@ -63,15 +63,15 @@ const eventSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    formFields: [{
+    formFields: [{ // organizer-defined custom questions shown to participant at registration time
         label: String,
         fieldType: String, // "text", "number", "dropdown", "checkbox", "file"
         required: Boolean,
-        options: String // Comma-separated options for dropdown/checkbox
+        options: String // comma-separated options for dropdown/checkbox
     }],
     status: {
         type: String,
-        enum: ['Draft', 'Published', 'Ongoing', 'Completed', 'Closed'],
+        enum: ['Draft', 'Published', 'Ongoing', 'Completed', 'Closed'], // lifecycle: Draft → Published → Ongoing → Completed/Closed
         default: 'Draft'
     }
 }, {

@@ -3,8 +3,6 @@ import { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-
-// QR scanner with camera and file upload support
 import AuthContext from '../context/AuthContext';
 
 const AttendanceTracking = () => {
@@ -27,6 +25,7 @@ const AttendanceTracking = () => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
+    const scanningRef = useRef(false); // ref so scanFromCamera loop can check it without stale closure
 
     useEffect(() => {
         fetchEventDetails();
@@ -37,9 +36,19 @@ const AttendanceTracking = () => {
         applyFilters();
     }, [filter, searchQuery, registrations]);
 
+    // Stop camera when navigating away
+    useEffect(() => {
+        return () => {
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+            scanningRef.current = false;
+        };
+    }, []);
+
     const fetchEventDetails = async () => {
         try {
-            console.log('Fetching event details for eventId:', eventId);
             const res = await axios.get(
                 `${API_URL}/api/events/${eventId}`,
                 { headers: { 'x-auth-token': authTokens.token } }
@@ -47,8 +56,6 @@ const AttendanceTracking = () => {
             setEvent(res.data);
         } catch (err) {
             console.error('Error fetching event:', err);
-            console.error('EventId:', eventId);
-            console.error('Response:', err.response?.data);
         }
     };
 
@@ -70,14 +77,12 @@ const AttendanceTracking = () => {
     const applyFilters = () => {
         let filtered = [...registrations];
 
-        // Apply attendance filter
         if (filter === 'scanned') {
             filtered = filtered.filter(r => r.attendance.marked);
         } else if (filter === 'not-scanned') {
             filtered = filtered.filter(r => !r.attendance.marked);
         }
 
-        // Apply search filter
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(r => 
@@ -105,6 +110,7 @@ const AttendanceTracking = () => {
                 ctx.drawImage(img, 0, 0);
 
                 try {
+                    // jsQR is dynamically imported so it's only loaded when the scanner is actually used
                     const jsQR = (await import('jsqr')).default;
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const code = jsQR(imageData.data, imageData.width, imageData.height);
@@ -127,12 +133,13 @@ const AttendanceTracking = () => {
     const startCamera = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
+                video: { facingMode: 'environment' } // prefers back camera on mobile
             });
             streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 videoRef.current.play();
+                scanningRef.current = true; // set before calling scanFromCamera so the loop starts
                 setScanning(true);
                 scanFromCamera();
             }
@@ -143,6 +150,7 @@ const AttendanceTracking = () => {
     };
 
     const stopCamera = () => {
+        scanningRef.current = false;
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
@@ -151,7 +159,7 @@ const AttendanceTracking = () => {
     };
 
     const scanFromCamera = async () => {
-        if (!scanning || !videoRef.current || !canvasRef.current) return;
+        if (!scanningRef.current || !videoRef.current || !canvasRef.current) return;
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
@@ -168,7 +176,7 @@ const AttendanceTracking = () => {
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
 
                 if (code) {
-                    stopCamera();
+                    stopCamera(); // stop loop before processing so it can't fire twice
                     await processScan(code.data, 'qr_scan');
                     return;
                 }
@@ -177,21 +185,17 @@ const AttendanceTracking = () => {
             }
         }
 
+        // rAF keeps the loop frame-rate aware and yields to the browser between frames
         requestAnimationFrame(scanFromCamera);
     };
 
     const processScan = async (qrData, method) => {
         try {
-            console.log('Processing scan - QR Data:', qrData);
-            console.log('Method:', method);
-            
             const res = await axios.post(
                 `${API_URL}/api/attendance/scan`,
                 { qrData, method },
                 { headers: { 'x-auth-token': authTokens.token } }
             );
-            
-            console.log('Scan successful:', res.data);
             
             setScanResult({
                 success: true,
@@ -205,12 +209,11 @@ const AttendanceTracking = () => {
             setTimeout(() => setScanResult(null), 5000);
         } catch (err) {
             console.error('Scan error:', err);
-            console.error('Error response:', err.response?.data);
             
             setScanResult({
                 success: false,
                 message: err.response?.data?.msg || 'Scan failed',
-                duplicate: err.response?.data?.duplicate
+                duplicate: err.response?.data?.duplicate // backend flags re-scans separately
             });
             
             setTimeout(() => setScanResult(null), 5000);

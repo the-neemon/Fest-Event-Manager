@@ -23,7 +23,7 @@ const HomePage = () => {
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
     const [formResponses, setFormResponses] = useState({});
     const [participantProfile, setParticipantProfile] = useState(null);
-    const { user, logoutUser, authTokens } = useContext(AuthContext);
+    const { user, authTokens } = useContext(AuthContext);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -105,6 +105,7 @@ const HomePage = () => {
             endDate: '',
             followedOnly: false
         });
+        // setTimeout lets React flush the state reset before the fetch reads the new values
         setTimeout(() => {
             fetchEvents();
             fetchTrendingEvents();
@@ -114,8 +115,8 @@ const HomePage = () => {
     const handleRegister = async (eventId, event) => {
         setSelectedEvent(event);
         
-        // For events with registration fees, show payment modal
-        if (event.registrationFee > 0) {
+        // Only merchandise events require payment proof
+        if (event.eventType === 'Merchandise') {
             setShowPaymentModal(true);
             return;
         }
@@ -127,24 +128,17 @@ const HomePage = () => {
             return;
         }
 
-        // For free events without custom fields, register directly
         if (!confirm("Are you sure you want to register?")) return;
         
         try {
-            console.log("Attempting registration for event:", eventId);
-            console.log("Auth token:", authTokens?.token ? "Present" : "Missing");
-            
             const response = await axios.post(`${API_URL}/api/events/register/${eventId}`, {}, {
                 headers: { "x-auth-token": authTokens.token }
             });
             
-            console.log("Registration response:", response.data);
             alert(`Success! You are registered. Ticket ID: ${response.data.ticketId}`);
-            window.location.reload(); 
+            window.location.reload(); // full reload to re-derive registration state across all event cards
         } catch (error) {
             console.error("Registration error:", error);
-            console.error("Error response:", error.response?.data);
-            console.error("Error status:", error.response?.status);
             alert(error.response?.data?.msg || error.message || "Registration Failed");
         }
     };
@@ -152,7 +146,7 @@ const HomePage = () => {
     const handlePaymentProofChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Check file type
+            // client-side validation is UX only — backend also validates via the 50mb body limit
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
                 alert('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
@@ -160,7 +154,6 @@ const HomePage = () => {
                 return;
             }
             
-            // Check file size (10MB limit)
             if (file.size > 10 * 1024 * 1024) {
                 alert('File size is too large. Please upload an image smaller than 10MB.');
                 e.target.value = '';
@@ -177,7 +170,6 @@ const HomePage = () => {
     };
 
     const handleRegistrationSubmit = async () => {
-        // Validate required fields
         const requiredFields = selectedEvent.formFields.filter(f => f.required);
         for (const field of requiredFields) {
             if (!formResponses[field.label] || formResponses[field.label].trim() === '') {
@@ -210,6 +202,7 @@ const HomePage = () => {
         }
 
         try {
+            // paymentProofPreview is the full base64 data URL read by FileReader
             const response = await axios.post(
                 `${API_URL}/api/events/register/${selectedEvent._id}`,
                 { paymentProof: paymentProofPreview },
@@ -241,13 +234,11 @@ const HomePage = () => {
 
     return (
         <div>
-            {/* 1. Navbar: Handles Navigation & Logout (Only shows if logged in) */}
             <Navbar />
 
-            {/* 2. Main Content Container */}
             <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
                 
-                {/* 3. Header Logic: Show Login button only if NOT logged in */}
+                {/* show login CTA for unauthenticated visitors browsing the public event list */}
                 {!user ? (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "20px" }}>
                         <h1>Felicity Events</h1>
@@ -278,7 +269,6 @@ const HomePage = () => {
                     </form>
                 </div>
 
-                {/* Filters Section */}
                 <div style={{ 
                     backgroundColor: "#f8f9fa", 
                     padding: "20px", 
@@ -414,7 +404,6 @@ const HomePage = () => {
                     </div>
                 )}
 
-                {/* 4. All Events Grid */}
                 <h2 style={{ marginBottom: "15px" }}>All Events ({events.length})</h2>
                 <div style={{ display: "grid", gap: "20px", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
                     {events.map((event) => (
@@ -565,7 +554,7 @@ const HomePage = () => {
                                                                 [field.label]: newValues.join(',')
                                                             });
                                                         }}
-                                                        style={{ marginRight: '8px' }}
+                    style={{ marginRight: '8px' }}
                                                     />
                                                     {option.trim()}
                                                 </label>
