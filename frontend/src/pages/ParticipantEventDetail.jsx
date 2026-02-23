@@ -200,6 +200,15 @@ const ParticipantEventDetail = () => {
                                     Ticket ID: {registration.ticketId}
                                 </p>
                             )}
+                            {event.registrationFee > 0 && (
+                                <p style={{ margin: "5px 0 0", fontSize: "14px" }}>
+                                    <strong>Total Paid:</strong> ₹{
+                                        event.registrationFee * (Number(registration.formResponses?.Quantity) || 1)
+                                    }
+                                    {Number(registration.formResponses?.Quantity) > 1 &&
+                                        ` (${registration.formResponses.Quantity} × ₹${event.registrationFee})`}
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>

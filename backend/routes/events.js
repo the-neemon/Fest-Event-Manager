@@ -114,8 +114,14 @@ router.get('/analytics', auth, async (req, res) => {
             if (event.eventType === 'Merchandise') {
                 totalSales += registrations.length;
             }
-            
-            totalRevenue += registrations.length * (event.registrationFee || 0);
+
+            // for merchandise, use per-registration quantity; for other events, count as 1
+            for (const reg of registrations) {
+                const qty = (event.eventType === 'Merchandise' && reg.formResponses && reg.formResponses.get('Quantity'))
+                    ? Number(reg.formResponses.get('Quantity')) || 1
+                    : 1;
+                totalRevenue += qty * (event.registrationFee || 0);
+            }
             totalAttendance += registrations.filter(r => r.attended).length;
         }
 
