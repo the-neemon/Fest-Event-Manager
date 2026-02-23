@@ -13,7 +13,8 @@ const registrationSchema = new mongoose.Schema({
     },
     ticketId: {
         type: String,
-        unique: true
+        unique: true,
+        sparse: true // allows multiple docs without a ticketId (pending-payment registrations)
     },
     status: {
         type: String,

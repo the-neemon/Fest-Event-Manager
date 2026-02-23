@@ -174,6 +174,13 @@ const MyEvents = () => {
                                     {selectedTicket.eventId?.registrationFee > 0 && (
                                         <p style={{ margin: "8px 0" }}><strong>Fee Paid:</strong> ₹{selectedTicket.eventId?.registrationFee}</p>
                                     )}
+                                    {selectedTicket.formResponses && Object.keys(selectedTicket.formResponses).length > 0 && (
+                                        <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f0f4ff", borderRadius: "6px" }}>
+                                            {Object.entries(selectedTicket.formResponses).map(([key, val]) => (
+                                                <p key={key} style={{ margin: "4px 0" }}><strong>{key}:</strong> {val}</p>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             
@@ -224,12 +231,18 @@ const MyEvents = () => {
                                         <p style={{ margin: "5px 0" }}><strong>Start Date:</strong> {new Date(registration.eventId?.startDate).toLocaleString()}</p>
                                         <p style={{ margin: "5px 0" }}><strong>End Date:</strong> {new Date(registration.eventId?.endDate).toLocaleString()}</p>
                                         <p style={{ margin: "5px 0" }}><strong>Location:</strong> {registration.eventId?.location || 'Not specified'}</p>
-                                        <p 
-                                            style={{ margin: "5px 0", color: "#007bff", cursor: "pointer", textDecoration: "underline" }}
-                                            onClick={() => viewTicket(registration)}
-                                        >
-                                            <strong>Ticket ID:</strong> {registration.ticketId}
-                                        </p>
+                                        {registration.ticketId ? (
+                                            <p 
+                                                style={{ margin: "5px 0", color: "#007bff", cursor: "pointer", textDecoration: "underline" }}
+                                                onClick={() => viewTicket(registration)}
+                                            >
+                                                <strong>Ticket ID:</strong> {registration.ticketId}
+                                            </p>
+                                        ) : (
+                                            <p style={{ margin: "5px 0", color: "#f57c00" }}>
+                                                ⏳ <strong>Payment pending approval</strong> — ticket issued once approved
+                                            </p>
+                                        )}
                                     </div>
                                     
                                     <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
@@ -249,6 +262,7 @@ const MyEvents = () => {
                                         >
                                             View Details
                                         </button>
+                                        {registration.ticketId && (
                                         <button 
                                             onClick={() => viewTicket(registration)}
                                             style={{
@@ -265,6 +279,7 @@ const MyEvents = () => {
                                         >
                                             View Ticket
                                         </button>
+                                        )}
                                         <button 
                                             onClick={() => handleCancelRegistration(registration._id)}
                                             style={{
@@ -442,6 +457,15 @@ const MyEvents = () => {
                                                 <span style={{ marginRight: "15px", fontSize: "12px", color: "#721c24" }}>
                                                     (Reason: {registration.paymentProof.rejectionReason})
                                                 </span>
+                                            )}
+                                            {registration.formResponses && Object.keys(registration.formResponses).length > 0 && (
+                                                <div style={{ marginTop: "6px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                                                    {Object.entries(registration.formResponses).map(([key, val]) => (
+                                                        <span key={key} style={{ fontSize: "12px", backgroundColor: "#f0f4ff", padding: "2px 8px", borderRadius: "3px" }}>
+                                                            <strong>{key}:</strong> {val}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
                                     </div>

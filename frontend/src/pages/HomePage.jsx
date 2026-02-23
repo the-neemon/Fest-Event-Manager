@@ -22,6 +22,7 @@ const HomePage = () => {
     const [paymentProofPreview, setPaymentProofPreview] = useState(null);
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
     const [formResponses, setFormResponses] = useState({});
+    const [merchSelections, setMerchSelections] = useState({ size: '', color: '', quantity: 1 });
     const [participantProfile, setParticipantProfile] = useState(null);
     const { user, authTokens } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -115,8 +116,9 @@ const HomePage = () => {
     const handleRegister = async (eventId, event) => {
         setSelectedEvent(event);
         
-        // Only merchandise events require payment proof
-        if (event.eventType === 'Merchandise') {
+        // payment proof required for merchandise and paid normal events
+        if (event.eventType === 'Merchandise' || (event.eventType === 'Normal' && event.registrationFee > 0)) {
+            setMerchSelections({ size: '', color: '', quantity: 1 });
             setShowPaymentModal(true);
             return;
         }
@@ -201,11 +203,30 @@ const HomePage = () => {
             return;
         }
 
+        // validate size/color only if the organizer set those options
+        if (selectedEvent?.eventType === 'Merchandise') {
+            if (selectedEvent.itemDetails?.sizes?.length > 0 && !merchSelections.size) {
+                alert("Please select a size");
+                return;
+            }
+            if (selectedEvent.itemDetails?.colors?.length > 0 && !merchSelections.color) {
+                alert("Please select a color");
+                return;
+            }
+        }
+
+        // build formResponses from merch selections so they're stored in the registration record
+        const mergedFormResponses = selectedEvent?.eventType === 'Merchandise' ? {
+            ...(merchSelections.size && { Size: merchSelections.size }),
+            ...(merchSelections.color && { Color: merchSelections.color }),
+            Quantity: String(merchSelections.quantity)
+        } : {};
+
         try {
             // paymentProofPreview is the full base64 data URL read by FileReader
             const response = await axios.post(
                 `${API_URL}/api/events/register/${selectedEvent._id}`,
-                { paymentProof: paymentProofPreview },
+                { paymentProof: paymentProofPreview, formResponses: mergedFormResponses },
                 { headers: { "x-auth-token": authTokens.token } }
             );
 
@@ -454,7 +475,7 @@ const HomePage = () => {
                                             ? "Registration Closed" 
                                             : !isEligible(event)
                                             ? "Not Eligible"
-                                            : (event.eventType === 'Merchandise' ? 'Buy Now' : 'Register')
+                                            : event.eventType === 'Merchandise' ? 'Buy Now' : event.registrationFee > 0 ? 'Register & Pay' : 'Register'
                                         }
                                     </button>
                                 </>
@@ -621,13 +642,89 @@ const HomePage = () => {
                             maxWidth: '500px',
                             width: '90%'
                         }}>
-                            <h2 style={{ marginBottom: '20px' }}>Purchase Merchandise</h2>
+                            <h2 style={{ marginBottom: '20px' }}>
+                                {selectedEvent?.eventType === 'Merchandise' ? 'Purchase Merchandise' : 'Complete Registration'}
+                            </h2>
                             <p style={{ marginBottom: '10px' }}>
                                 <strong>Event:</strong> {selectedEvent?.name}
                             </p>
-                            <p style={{ marginBottom: '20px' }}>
-                                <strong>Price:</strong> ₹{selectedEvent?.registrationFee || 0}
+                            <p style={{ marginBottom: selectedEvent?.eventType === 'Merchandise' ? '10px' : '20px' }}>
+                                <strong>Fee per item:</strong> ₹{selectedEvent?.registrationFee || 0}
                             </p>
+                            {selectedEvent?.eventType === 'Merchandise' && (
+                                <p style={{ marginBottom: '20px', fontSize: '16px', fontWeight: 'bold', color: '#28a745' }}>
+                                    Total: ₹{(selectedEvent?.registrationFee || 0) * (Number(merchSelections.quantity) || 1)}
+                                </p>
+                            )}
+
+                            {selectedEvent?.eventType === 'Merchandise' && (
+                                <>
+                                    {selectedEvent.itemDetails?.sizes?.length > 0 && (
+                                        <div style={{ marginBottom: '15px' }}>
+                                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Size <span style={{ color: 'red' }}>*</span></label>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                {selectedEvent.itemDetails.sizes.map(s => (
+                                                    <button
+                                                        key={s}
+                                                        type="button"
+                                                        onClick={() => setMerchSelections(prev => ({ ...prev, size: s }))}
+                                                        style={{
+                                                            padding: '6px 14px',
+                                                            border: '2px solid',
+                                                            borderColor: merchSelections.size === s ? '#007bff' : '#ddd',
+                                                            borderRadius: '4px',
+                                                            backgroundColor: merchSelections.size === s ? '#e7f0ff' : 'white',
+                                                            cursor: 'pointer',
+                                                            fontWeight: merchSelections.size === s ? 'bold' : 'normal'
+                                                        }}
+                                                    >{s}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedEvent.itemDetails?.colors?.length > 0 && (
+                                        <div style={{ marginBottom: '15px' }}>
+                                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Color <span style={{ color: 'red' }}>*</span></label>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                {selectedEvent.itemDetails.colors.map(c => (
+                                                    <button
+                                                        key={c}
+                                                        type="button"
+                                                        onClick={() => setMerchSelections(prev => ({ ...prev, color: c }))}
+                                                        style={{
+                                                            padding: '6px 14px',
+                                                            border: '2px solid',
+                                                            borderColor: merchSelections.color === c ? '#007bff' : '#ddd',
+                                                            borderRadius: '4px',
+                                                            backgroundColor: merchSelections.color === c ? '#e7f0ff' : 'white',
+                                                            cursor: 'pointer',
+                                                            fontWeight: merchSelections.color === c ? 'bold' : 'normal'
+                                                        }}
+                                                    >{c}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Quantity</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={selectedEvent.purchaseLimit || 1}
+                                            value={merchSelections.quantity}
+                                            onChange={e => setMerchSelections(prev => ({ ...prev, quantity: e.target.value }))}
+                                            onBlur={e => {
+                                                const clamped = Math.max(1, Math.min(Number(e.target.value) || 1, selectedEvent.purchaseLimit || 1));
+                                                setMerchSelections(prev => ({ ...prev, quantity: clamped }));
+                                            }}
+                                            style={{ width: '80px', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                                        />
+                                        <span style={{ marginLeft: '8px', fontSize: '13px', color: '#666' }}>max {selectedEvent.purchaseLimit || 1} per person</span>
+                                    </div>
+                                </>
+                            )}
                             
                             <div style={{ marginBottom: '20px' }}>
                                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
@@ -689,7 +786,7 @@ const HomePage = () => {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    Submit Purchase
+                                    {selectedEvent?.eventType === 'Merchandise' ? 'Submit Purchase' : 'Submit Payment'}
                                 </button>
                             </div>
                         </div>

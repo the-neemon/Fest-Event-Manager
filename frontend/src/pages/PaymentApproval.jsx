@@ -144,6 +144,13 @@ const PaymentApproval = () => {
                                                 Reviewed: {new Date(payment.paymentProof.reviewedAt).toLocaleString()}
                                             </p>
                                         )}
+                                        {payment.formResponses && Object.keys(payment.formResponses).length > 0 && (
+                                            <div style={{ marginTop: "8px", padding: "8px", backgroundColor: "#f0f4ff", borderRadius: "4px", fontSize: "13px" }}>
+                                                {Object.entries(payment.formResponses).map(([key, val]) => (
+                                                    <span key={key} style={{ marginRight: "12px" }}><strong>{key}:</strong> {val}</span>
+                                                ))}
+                                            </div>
+                                        )}
                                         {payment.paymentProof?.rejectionReason && (
                                             <p style={{ fontSize: "13px", color: "#dc3545", marginTop: "8px", padding: "8px", backgroundColor: "#fff5f5", borderRadius: "4px" }}>
                                                 <strong>Reason:</strong> {payment.paymentProof.rejectionReason}

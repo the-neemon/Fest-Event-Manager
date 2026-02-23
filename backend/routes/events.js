@@ -340,16 +340,10 @@ router.get('/trending', async (req, res) => {
 
 router.post('/register/:id', auth, async (req, res) => {
     try {
-        console.log('Registration attempt for event:', req.params.id);
-        console.log('User:', req.user);
-        
         const event = await Event.findById(req.params.id);
         if (!event) {
-            console.log('Event not found');
             return res.status(404).json({ msg: "Event not found" });
         }
-
-        console.log('Event found:', event.name);
 
         const participant = await Participant.findById(req.user.id);
         if (!participant) {
@@ -374,45 +368,40 @@ router.post('/register/:id', auth, async (req, res) => {
         });
 
         if (existingRegistration) {
-            console.log('User already registered');
             return res.status(400).json({ msg: "You are already registered for this event." });
         }
 
         if (event.eventType === 'Normal') {
             if (event.participants.length >= event.registrationLimit) {
-                console.log('Event is full');
                 return res.status(400).json({ msg: "Event is full!" });
             }
         }
 
         if (event.eventType === 'Merchandise') {
             if (event.stock <= 0) {
-                console.log('Out of stock');
                 return res.status(400).json({ msg: "Out of Stock!" });
             }
             // Don't decrement stock yet - will happen on payment approval
         }
 
-        console.log('Creating registration record...');
         const registration = new Registration({
             participantId: req.user.id,
             eventId: req.params.id,
             formResponses: req.body.formResponses || {}
         });
 
-        // For merchandise, require payment proof and set status to Pending
-        if (event.eventType === 'Merchandise') {
+        // payment proof required for merchandise AND paid normal events
+        const requiresPayment = event.eventType === 'Merchandise' || (event.eventType === 'Normal' && event.registrationFee > 0);
+        if (requiresPayment) {
             const { paymentProof } = req.body;
             if (!paymentProof) {
-                return res.status(400).json({ msg: "Payment proof is required for merchandise purchases" });
+                return res.status(400).json({ msg: "Payment proof is required for this event" });
             }
             
-            // Validate base64 image format
             if (!paymentProof.startsWith('data:image/')) {
                 return res.status(400).json({ msg: "Invalid payment proof format. Please upload a valid image file." });
             }
             
-            // Check file size (base64 string length, ~10MB limit)
             if (paymentProof.length > 15000000) {
                 return res.status(400).json({ msg: "Payment proof file is too large. Please upload an image smaller than 10MB." });
             }
@@ -424,31 +413,30 @@ router.post('/register/:id', auth, async (req, res) => {
             };
             registration.status = 'Pending';
         } else {
-            // For normal events, generate ticket immediately
+            // free events: generate ticket immediately
             const ticketId = `TKT-${Date.now()}-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
             registration.ticketId = ticketId;
             registration.status = 'Registered';
         }
 
         await registration.save();
-        console.log('Registration saved');
 
         event.participants.push(req.user.id);
         await event.save();
-        console.log('Event updated with participant');
 
-        try {
-            const participant = await Participant.findById(req.user.id);
-            if (participant && participant.email) {
-                await sendTicketEmail(participant, event, registration.ticketId);
-                console.log('Confirmation email sent successfully');
+        // only send ticket email for free events; paid events get their ticket email on approval
+        if (registration.ticketId) {
+            try {
+                if (participant.email) {
+                    await sendTicketEmail(participant, event, registration.ticketId);
+                }
+            } catch (emailError) {
+                console.error('Error sending email, but registration successful:', emailError);
             }
-        } catch (emailError) {
-            console.error('Error sending email, but registration successful:', emailError);
         }
 
-        const message = event.eventType === 'Merchandise' 
-            ? "Order placed! Check your email for confirmation. Payment is pending approval." 
+        const message = requiresPayment
+            ? "Registration submitted! Your payment is pending approval. You'll receive your ticket once approved."
             : "Registration Successful! Check your email for the ticket.";
 
         res.json({ 
@@ -459,7 +447,6 @@ router.post('/register/:id', auth, async (req, res) => {
 
     } catch (err) {
         console.error('Registration error:', err.message);
-        console.error('Full error:', err);
         res.status(500).json({ msg: "Server Error", error: err.message });
     }
 });
@@ -492,7 +479,7 @@ router.get('/my-registrations/upcoming', auth, async (req, res) => {
         
         const registrations = await Registration.find({ 
             participantId: req.user.id,
-            status: 'Registered'
+            status: { $in: ['Registered', 'Pending', 'Approved'] }
         })
         .populate({
             path: 'eventId',
