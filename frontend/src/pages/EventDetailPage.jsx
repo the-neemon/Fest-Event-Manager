@@ -137,8 +137,13 @@ const EventDetailPage = () => {
 
     const registrationCount = participants.length;
     const attendanceCount = participants.filter(p => p.attendance?.marked).length;
-    // naive estimate: counts all registrations regardless of payment approval status
-    const revenue = registrationCount * (event.registrationFee || 0);
+    // sum qty×fee per registration (qty from formResponses for Merchandise events)
+    const revenue = participants.reduce((sum, p) => {
+        const qty = (event.eventType === 'Merchandise' && p.formResponses?.Quantity)
+            ? Number(p.formResponses.Quantity) || 1
+            : 1;
+        return sum + qty * (event.registrationFee || 0);
+    }, 0);
 
     return (
         <div>
@@ -364,7 +369,17 @@ const EventDetailPage = () => {
                                             <td style={{ padding: "12px" }}>{participant.participantId.firstName} {participant.participantId.lastName}</td>
                                             <td style={{ padding: "12px" }}>{participant.participantId.email}</td>
                                             <td style={{ padding: "12px" }}>{new Date(participant.registrationDate).toLocaleDateString()}</td>
-                                            <td style={{ padding: "12px" }}>₹{event.registrationFee || "Free"}</td>
+                                            <td style={{ padding: "12px" }}>
+                                                {event.registrationFee > 0
+                                                    ? (() => {
+                                                        const qty = (event.eventType === 'Merchandise' && participant.formResponses?.Quantity)
+                                                            ? Number(participant.formResponses.Quantity) || 1
+                                                            : 1;
+                                                        return `₹${qty * event.registrationFee}${qty > 1 ? ` (${qty}×₹${event.registrationFee})` : ''}`;
+                                                    })()
+                                                    : 'Free'
+                                                }
+                                            </td>
                                             <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "12px" }}>{participant.ticketId}</td>
                                             <td style={{ padding: "12px" }}>
                                                 {(event.status === 'Ongoing' || event.status === 'Completed') ? (
