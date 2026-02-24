@@ -1,68 +1,79 @@
-# Event Management System - DASS Assignment 1
+# Fest Event Manager
 
-## Details
-- **Name**: Naman Singhal
-- **Roll Number**: 2024114013
+**Name:** Naman Singhal · **Roll No:** 2024114013 · **Course:** DASS Assignment 1
 
-## Technology Stack
-### Backend
-- **Node.js** (v22.14.0)
-- **Express.js** (v5.2.1)
-- **MongoDB** with Mongoose (v9.1.5)
-- **JWT Authentication**
-- **QRCode Generation**
-- **Nodemailer** for email services
+A full-stack festival/club event management platform. Admins manage organizers, organizers create and run events, participants register and attend.
 
-### Frontend
-- **React** (v19.2.0)
-- **Vite** (rolldown-vite 7.2.5)
-- **React Router DOM** (v7.13.0)
-- **Axios** for HTTP requests
-- **jsqr** (v1.4.0) for QR code scanning
+---
 
-## API Endpoints Summary
+## Stack
 
-### Forum Routes
-- `GET /api/forum/:eventId/messages` - Get forum messages with replies
-- `POST /api/forum/:eventId/messages` - Post new message/reply
-- `PUT /api/forum/messages/:messageId/react` - Add/remove reaction
-- `PUT /api/forum/messages/:messageId/pin` - Pin/unpin message
-- `DELETE /api/forum/messages/:messageId` - Soft delete message
-- `GET /api/forum/:eventId/stats` - Get forum statistics
+| Layer | Tech |
+|---|---|
+| Backend | Node.js v22, Express v5, MongoDB + Mongoose, Socket.io |
+| Frontend | React v19, Vite, React Router v7, Axios |
+| Auth | JWT (`x-auth-token` header), roles: `admin / organizer / participant` |
+| Realtime | Socket.io — forum messages, reactions, pins, deletes pushed live |
+| Email | Nodemailer — registration confirmation, password reset |
+| QR | `qrcode` (generation) + `jsqr` (camera/file scan for attendance) |
 
-### Payment Routes
-- `GET /api/organizer/pending-payments/:eventId` - Get pending payments
-- `PUT /api/organizer/approve-payment/:registrationId` - Approve payment
-- `PUT /api/organizer/reject-payment/:registrationId` - Reject payment
+---
 
-### Attendance Routes
-- `POST /api/attendance/scan` - Scan QR code
-- `GET /api/attendance/event/:eventId` - Get attendance data
-- `POST /api/attendance/manual/:registrationId` - Manual attendance override
-- `GET /api/attendance/logs/:eventId` - Get audit logs
+## Features
 
-## Setup Instructions
+- **Admin** — approve/reject organizer applications, manage organizer accounts
+- **Organizer** — create Normal or Merchandise events (with custom registration questions), publish/manage events, approve payment proofs, track attendance via QR scan, moderate the discussion forum (pin/delete messages, post announcements)
+- **Participant** — browse and register for events (free or paid), upload payment proof, view tickets with QR codes, react to and reply in the event forum
+
+---
+
+## Setup
 
 ### Prerequisites
-- Node.js v22.14.0 or higher
-- MongoDB installed and running
-- npm or yarn package manager
+- Node.js ≥ v22, MongoDB running (local or Atlas)
 
-### Backend Setup
+### Backend
 ```bash
 cd backend
 npm install
-# Create .env file with:
-# MONGO_URI=mongodb://localhost:27017/event-management
-# JWT_SECRET=your_jwt_secret
-# EMAIL_USER=your_email
-# EMAIL_PASS=your_email_password
-node server.js
+```
+Create `backend/.env`:
+```
+MONGO_URI=mongodb://localhost:27017/fest-event-manager
+JWT_SECRET=your_jwt_secret
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+```bash
+node server.js          # runs on :5000
 ```
 
-### Frontend Setup
+### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev             # runs on :5173
 ```
+
+---
+
+## Key API Routes
+
+```
+Auth         POST /api/auth/register  POST /api/auth/login
+Events       GET|POST /api/events     GET /api/events/detail/:id
+Forum        GET|POST /api/forum/:eventId/messages
+             PUT  /api/forum/messages/:id/react|pin
+             DELETE /api/forum/messages/:id
+Attendance   POST /api/attendance/scan
+Payments     GET  /api/organizer/pending-payments/:eventId
+             PUT  /api/organizer/approve-payment/:registrationId
+Admin        GET|PUT /api/admin/organizers
+```
+
+---
+
+## Live Deployment
+
+- **Backend:** https://fest-event-manager.onrender.com
+- **Frontend:** Vercel
