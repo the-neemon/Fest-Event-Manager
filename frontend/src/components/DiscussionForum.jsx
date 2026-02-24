@@ -103,16 +103,12 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                 { headers: { 'x-auth-token': authTokens.token } }
             );
 
-            if (replyTo) {
-                setMessages(prev => prev.map(msg => 
-                    msg._id === replyTo._id 
-                        ? { ...msg, replies: [...(msg.replies || []), res.data], replyCount: (msg.replyCount || 0) + 1 }
-                        : msg
-                ));
-            } else {
-                setMessages(prev => [res.data, ...prev]);
-            }
-
+            // Don't do an optimistic update here — the backend emits a socket event
+            // (new_message or message_updated) to all clients INCLUDING the sender,
+            // so the message will appear via the socket handler. Doing both causes a
+            // race condition where the socket event fires before the HTTP response
+            // resolves, adding the message once via socket and again via optimistic
+            // update, duplicating it (and visually "reposting" all existing messages).
             setNewMessage('');
             setIsAnnouncement(false);
             setReplyTo(null);
