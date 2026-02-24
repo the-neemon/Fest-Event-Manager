@@ -47,6 +47,20 @@ const AttendanceTracking = () => {
         };
     }, []);
 
+    // Attach stream to video element once it's rendered (scanning=true guarantees the ref is populated)
+    useEffect(() => {
+        if (scanning && streamRef.current && videoRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            videoRef.current.play()
+                .then(() => scanFromCamera())
+                .catch(err => {
+                    console.error('Video play error:', err);
+                    alert(`Camera play failed: ${err.message}`);
+                    stopCamera();
+                });
+        }
+    }, [scanning]);
+
     const fetchEventDetails = async () => {
         try {
             const res = await axios.get(
@@ -136,16 +150,12 @@ const AttendanceTracking = () => {
                 video: { facingMode: 'environment' } // prefers back camera on mobile
             });
             streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play(); // must be awaited — unhandled rejection silently breaks the scan loop
-                scanningRef.current = true; // set before calling scanFromCamera so the loop starts
-                setScanning(true);
-                scanFromCamera();
-            }
+            // set scanning=true first so the video element is rendered before we attach the stream
+            setScanning(true);
+            scanningRef.current = true;
         } catch (err) {
             console.error('Camera error:', err);
-            alert(`Failed to access camera (${err.message}). Please use file upload instead.`);
+            alert(`Failed to access camera (${err.message}). Please check camera permissions or use file upload instead.`);
         }
     };
 
@@ -355,19 +365,12 @@ const AttendanceTracking = () => {
                 <div style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px", marginBottom: "25px" }}>
                     <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "15px" }}>QR Code Scanner</h2>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                        {!scanning ? (
+                        {!scanning && (
                             <button
                                 onClick={startCamera}
                                 style={{ padding: "12px 24px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
                             >
                                 Start Camera Scan
-                            </button>
-                        ) : (
-                            <button
-                                onClick={stopCamera}
-                                style={{ padding: "12px 24px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
-                            >
-                                Stop Camera
                             </button>
                         )}
                         <label style={{ padding: "12px 24px", backgroundColor: "#28a745", color: "white", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>
@@ -387,20 +390,42 @@ const AttendanceTracking = () => {
                         </button>
                     </div>
 
-                    {/* Camera Preview */}
-                    {scanning && (
-                        <div style={{ marginTop: "15px" }}>
+                    {/* Camera Preview - always rendered so videoRef is never null when startCamera runs */}
+                    <div style={{ marginTop: "15px", display: scanning ? "block" : "none" }}>
+                        <div style={{ position: "relative", display: "inline-block", width: "100%", maxWidth: "450px" }}>
                             <video
                                 ref={videoRef}
-                                style={{ width: "100%", maxWidth: "450px", border: "1px solid #ddd", borderRadius: "6px" }}
+                                style={{ width: "100%", display: "block", borderRadius: "6px", border: "3px solid #007bff" }}
                                 playsInline
                                 muted
                                 autoPlay
                             />
-                            <canvas ref={canvasRef} style={{ display: "none" }} />
-                            <p style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>Position QR code in camera view</p>
+                            {/* QR aim overlay */}
+                            <div style={{
+                                position: "absolute", top: "50%", left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                width: "180px", height: "180px",
+                                border: "3px solid rgba(0,123,255,0.8)",
+                                borderRadius: "8px",
+                                boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)",
+                                pointerEvents: "none"
+                            }} />
+                            {/* Stop button overlaid on video */}
+                            <button
+                                onClick={stopCamera}
+                                style={{
+                                    position: "absolute", top: "8px", right: "8px",
+                                    padding: "6px 14px", backgroundColor: "#dc3545",
+                                    color: "white", border: "none", borderRadius: "4px",
+                                    cursor: "pointer", fontWeight: "600", fontSize: "13px"
+                                }}
+                            >
+                                Stop Camera
+                            </button>
                         </div>
-                    )}
+                        <canvas ref={canvasRef} style={{ display: "none" }} />
+                        <p style={{ fontSize: "13px", color: "#007bff", marginTop: "8px", fontWeight: "600" }}>Scanning... centre the QR code in the blue frame</p>
+                    </div>
                 </div>
 
                 {/* Filters and Search */}
