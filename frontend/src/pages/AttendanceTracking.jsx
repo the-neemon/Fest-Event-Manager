@@ -138,14 +138,14 @@ const AttendanceTracking = () => {
             streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.play();
+                await videoRef.current.play(); // must be awaited — unhandled rejection silently breaks the scan loop
                 scanningRef.current = true; // set before calling scanFromCamera so the loop starts
                 setScanning(true);
                 scanFromCamera();
             }
         } catch (err) {
             console.error('Camera error:', err);
-            alert('Failed to access camera. Please use file upload instead.');
+            alert(`Failed to access camera (${err.message}). Please use file upload instead.`);
         }
     };
 
@@ -394,6 +394,8 @@ const AttendanceTracking = () => {
                                 ref={videoRef}
                                 style={{ width: "100%", maxWidth: "450px", border: "1px solid #ddd", borderRadius: "6px" }}
                                 playsInline
+                                muted
+                                autoPlay
                             />
                             <canvas ref={canvasRef} style={{ display: "none" }} />
                             <p style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>Position QR code in camera view</p>
