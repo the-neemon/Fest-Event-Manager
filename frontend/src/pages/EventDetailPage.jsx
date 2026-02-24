@@ -204,7 +204,7 @@ const EventDetailPage = () => {
                                     {event.status === 'Published' && (
                                         <button onClick={handleEdit} style={{ backgroundColor: "#007bff", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>Edit Limited</button>
                                     )}
-                                    {event.eventType === 'Merchandise' && (
+                                    {(event.eventType === 'Merchandise' || (event.eventType === 'Normal' && event.registrationFee > 0)) && (
                                         <button 
                                             onClick={() => navigate(`/payment-approval/${event._id}`)} 
                                             style={{ backgroundColor: "#ffc107", color: "#000", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
