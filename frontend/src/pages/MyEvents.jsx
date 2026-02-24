@@ -247,7 +247,7 @@ const MyEvents = () => {
                                             </p>
                                         ) : (
                                             <p style={{ margin: "5px 0", color: "#f57c00" }}>
-                                                ⏳ <strong>Payment pending approval</strong> — ticket issued once approved
+                                                <strong>Payment pending approval</strong> — ticket issued once approved
                                             </p>
                                         )}
                                     </div>

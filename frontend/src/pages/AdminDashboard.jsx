@@ -69,7 +69,7 @@ const AdminDashboard = () => {
                             borderRadius: "5px",
                             marginBottom: "20px"
                         }}>
-                            <h3 style={{ color: "#155724", marginBottom: "10px" }}>✓ Club Created Successfully!</h3>
+                            <h3 style={{ color: "#155724", marginBottom: "10px" }}>Club Created Successfully!</h3>
                             <p style={{ margin: "5px 0", color: "#155724" }}><strong>Email:</strong> {generatedCredentials.email}</p>
                             <p style={{ margin: "5px 0", color: "#155724" }}><strong>Password:</strong> {generatedCredentials.password}</p>
                             <p style={{ fontSize: "12px", color: "#155724", marginTop: "10px" }}>

@@ -454,7 +454,7 @@ const HomePage = () => {
                                             color: "#856404",
                                             fontSize: "13px"
                                         }}>
-                                            ⚠️ You are not eligible for this event
+                                            You are not eligible for this event
                                         </div>
                                     )}
                                     <button 

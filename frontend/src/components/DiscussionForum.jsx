@@ -214,7 +214,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                             color: '#dc3545',
                             fontSize: '14px'
                         }}>
-                            📌 Pinned
+                            Pinned
                         </span>
                     )}
                 </div>
@@ -253,20 +253,20 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
             </div>
             <p style={{ margin: '10px 0', whiteSpace: 'pre-wrap' }}>{message.content}</p>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px' }}>
-                {['👍', '❤️', '😂', '🎉'].map(emoji => (
+                {[['like', 'Like'], ['heart', 'Heart'], ['haha', 'Haha'], ['celebrate', 'Celebrate']].map(([key, label]) => (
                     <button
-                        key={emoji}
-                        onClick={() => handleReaction(message._id, emoji)}
+                        key={key}
+                        onClick={() => handleReaction(message._id, key)}
                         style={{
                             padding: '4px 8px',
-                            fontSize: '16px',
-                            backgroundColor: hasUserReacted(message, emoji) ? '#e3f2fd' : '#f8f9fa',
-                            border: hasUserReacted(message, emoji) ? '2px solid #2196f3' : '1px solid #ddd',
+                            fontSize: '13px',
+                            backgroundColor: hasUserReacted(message, key) ? '#e3f2fd' : '#f8f9fa',
+                            border: hasUserReacted(message, key) ? '2px solid #2196f3' : '1px solid #ddd',
                             borderRadius: '20px',
                             cursor: 'pointer'
                         }}
                     >
-                        {emoji} {getReactionCount(message, emoji) > 0 && getReactionCount(message, emoji)}
+                        {label} {getReactionCount(message, key) > 0 && getReactionCount(message, key)}
                     </button>
                 ))}
                 {!isReply && (
@@ -345,7 +345,7 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                                 fontSize: '16px'
                             }}
                         >
-                            ✕
+                            Cancel
                         </button>
                     </div>
                 )}

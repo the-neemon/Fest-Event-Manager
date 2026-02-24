@@ -191,7 +191,7 @@ const ParticipantEventDetail = () => {
                             borderRadius: "6px",
                             borderLeft: "4px solid #28a745"
                         }}>
-                            <strong>✓ You are registered for this event</strong>
+                            <strong>You are registered for this event</strong>
                             <p style={{ margin: "5px 0 0", fontSize: "14px" }}>
                                 Registration Date: {new Date(registration.registrationDate).toLocaleDateString()}
                             </p>
