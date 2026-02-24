@@ -1,10 +1,12 @@
 import { API_URL } from "../config";
 import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import AuthContext from '../context/AuthContext';
 
 
-// Real-time forum with polling, reactions, threading, and moderation
+// Real-time forum powered by Socket.io — messages, reactions, pins, and deletes
+// propagate instantly to all connected clients without polling
 const DiscussionForum = ({ eventId, isOrganizer }) => {
     const { authTokens, user } = useContext(AuthContext);
     const [messages, setMessages] = useState([]);
@@ -13,61 +15,68 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
     const [replyTo, setReplyTo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState(null);
-    const pollIntervalRef = useRef(null);
+    const socketRef = useRef(null);
 
     useEffect(() => {
         fetchMessages();
-        // ref instead of state so clearing the interval doesn't trigger a re-render
-        pollIntervalRef.current = setInterval(() => {
-            fetchMessages(true);
-        }, 5000);
 
-        return () => { // cleanup stops the poll when the component unmounts
-            if (pollIntervalRef.current) {
-                clearInterval(pollIntervalRef.current);
-            }
+        // Connect to the same origin the backend is served from
+        const socket = io(API_URL, { transports: ['websocket', 'polling'] });
+        socketRef.current = socket;
+
+        // Join the room scoped to this event so broadcasts don't leak to other forums
+        socket.emit('join_forum', eventId);
+
+        socket.on('new_message', (message) => {
+            setMessages(prev => {
+                // avoid duplicates (our own post is added optimistically in handlePostMessage)
+                if (prev.some(m => m._id === message._id)) return prev;
+                return [message, ...prev];
+            });
+            showNotification('New message');
+        });
+
+        socket.on('message_updated', (updated) => {
+            // fired when a reply is posted — replaces the parent message with refreshed reply list
+            setMessages(prev => prev.map(m => m._id === updated._id ? updated : m));
+        });
+
+        socket.on('reaction_updated', (updated) => {
+            setMessages(prev => prev.map(m => m._id === updated._id ? updated : m));
+        });
+
+        socket.on('pin_updated', (updated) => {
+            setMessages(prev =>
+                prev.map(m => m._id === updated._id ? updated : m)
+                    .sort((a, b) => {
+                        if (a.isPinned && !b.isPinned) return -1;
+                        if (!a.isPinned && b.isPinned) return 1;
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    })
+            );
+        });
+
+        socket.on('message_deleted', ({ messageId }) => {
+            setMessages(prev => prev.filter(m => m._id !== messageId));
+        });
+
+        return () => {
+            socket.emit('leave_forum', eventId);
+            socket.disconnect();
         };
     }, [eventId]);
 
-    const fetchMessages = async (isPolling = false) => {
+    const fetchMessages = async () => {
         try {
-            // on polling passes the timestamp of the newest known message so backend returns only newer ones
-            const lastFetch = isPolling && messages.length > 0 
-                ? new Date(Math.max(...messages.map(m => new Date(m.createdAt)))).toISOString()
-                : null;
-
-            const url = lastFetch 
-                ? `${API_URL}/api/forum/${eventId}/messages?lastFetch=${lastFetch}`
-                : `${API_URL}/api/forum/${eventId}/messages`;
-
-            const res = await axios.get(url, {
-                headers: { 'x-auth-token': authTokens.token }
-            });
-
-            // Map keyed by _id deduplicates in case of overlapping polls
-            const uniqueMessages = Array.from(
-                new Map(res.data.map(msg => [msg._id, msg])).values()
+            const res = await axios.get(
+                `${API_URL}/api/forum/${eventId}/messages`,
+                { headers: { 'x-auth-token': authTokens.token } }
             );
-
-            if (isPolling && uniqueMessages.length > 0) {
-                const existingIds = new Set(messages.map(m => m._id));
-                const newMessages = uniqueMessages.filter(msg => !existingIds.has(msg._id));
-                
-                if (newMessages.length > 0) {
-                    setMessages(prev => {
-                        const combined = [...newMessages, ...prev];
-                        return Array.from(new Map(combined.map(msg => [msg._id, msg])).values());
-                    });
-                    showNotification(`${newMessages.length} new message(s)`);
-                }
-            } else if (!isPolling) {
-                setMessages(uniqueMessages);
-            }
-            
+            setMessages(res.data);
             setLoading(false);
         } catch (err) {
             console.error('Error fetching messages:', err);
-            if (!isPolling) setLoading(false);
+            setLoading(false);
         }
     };
 

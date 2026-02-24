@@ -4,6 +4,8 @@ const auth = require('../middleware/auth');
 const Message = require('../models/Message');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
+// io is exported from server.js after Socket.io attaches to the http.Server
+const { io } = require('../server');
 
 // GET forum messages - supports incremental loading via lastFetch query param
 router.get('/:eventId/messages', auth, async (req, res) => {
@@ -174,6 +176,9 @@ router.put('/messages/:messageId/react', auth, async (req, res) => {
             })
             .lean();
 
+        // emit to room so all viewers see the reaction update without polling
+        io.to(`forum:${populatedMessage.eventId}`).emit('reaction_updated', populatedMessage);
+
         res.json(populatedMessage);
 
     } catch (err) {
@@ -207,6 +212,8 @@ router.put('/messages/:messageId/pin', auth, async (req, res) => {
             })
             .lean();
 
+        io.to(`forum:${populatedMessage.eventId}`).emit('pin_updated', populatedMessage);
+
         res.json(populatedMessage);
 
     } catch (err) {
@@ -238,6 +245,8 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
             { parentMessageId: message._id },
             { isDeleted: true }
         );
+
+        io.to(`forum:${message.eventId}`).emit('message_deleted', { messageId: message._id.toString() });
 
         res.json({ msg: "Message deleted successfully" });
 
