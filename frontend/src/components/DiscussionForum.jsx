@@ -24,8 +24,11 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
         const socket = io(API_URL, { transports: ['websocket', 'polling'] });
         socketRef.current = socket;
 
-        // Join the room scoped to this event so broadcasts don't leak to other forums
-        socket.emit('join_forum', eventId);
+        // join_forum must be sent after the socket is connected — emitting before
+        // the handshake completes means the server never receives the room join
+        socket.on('connect', () => {
+            socket.emit('join_forum', eventId);
+        });
 
         socket.on('new_message', (message) => {
             setMessages(prev => {
@@ -262,20 +265,20 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
             </div>
             <p style={{ margin: '10px 0', whiteSpace: 'pre-wrap' }}>{message.content}</p>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px' }}>
-                {[['like', 'Like'], ['heart', 'Heart'], ['haha', 'Haha'], ['celebrate', 'Celebrate']].map(([key, label]) => (
+                {[['👍', 'like'], ['❤️', 'heart'], ['😂', 'haha'], ['🎉', 'celebrate']].map(([emoji, key]) => (
                     <button
                         key={key}
                         onClick={() => handleReaction(message._id, key)}
                         style={{
                             padding: '4px 8px',
-                            fontSize: '13px',
+                            fontSize: '16px',
                             backgroundColor: hasUserReacted(message, key) ? '#e3f2fd' : '#f8f9fa',
                             border: hasUserReacted(message, key) ? '2px solid #2196f3' : '1px solid #ddd',
                             borderRadius: '20px',
                             cursor: 'pointer'
                         }}
                     >
-                        {label} {getReactionCount(message, key) > 0 && getReactionCount(message, key)}
+                        {emoji} {getReactionCount(message, key) > 0 && getReactionCount(message, key)}
                     </button>
                 ))}
                 {!isReply && (

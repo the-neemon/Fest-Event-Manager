@@ -116,17 +116,17 @@ const HomePage = () => {
     const handleRegister = async (eventId, event) => {
         setSelectedEvent(event);
         
-        // payment proof required for merchandise and paid normal events
-        if (event.eventType === 'Merchandise' || (event.eventType === 'Normal' && event.registrationFee > 0)) {
-            setMerchSelections({ size: '', color: '', quantity: 1 });
-            setShowPaymentModal(true);
-            return;
-        }
-
-        // Check if event has custom form fields
+        // Always show custom form fields first if there are any
         if (event.formFields && event.formFields.length > 0) {
             setShowRegistrationModal(true);
             setFormResponses({});
+            return;
+        }
+
+        // payment proof required for merchandise and paid normal events (no custom fields)
+        if (event.eventType === 'Merchandise' || (event.eventType === 'Normal' && event.registrationFee > 0)) {
+            setMerchSelections({ size: '', color: '', quantity: 1 });
+            setShowPaymentModal(true);
             return;
         }
 
@@ -180,6 +180,14 @@ const HomePage = () => {
             }
         }
 
+        // if paid, close this modal and open payment modal (formResponses carried via state)
+        if (selectedEvent.eventType === 'Merchandise' || (selectedEvent.eventType === 'Normal' && selectedEvent.registrationFee > 0)) {
+            setShowRegistrationModal(false);
+            setMerchSelections({ size: '', color: '', quantity: 1 });
+            setShowPaymentModal(true);
+            return;
+        }
+
         try {
             const response = await axios.post(
                 `${API_URL}/api/events/register/${selectedEvent._id}`,
@@ -217,10 +225,11 @@ const HomePage = () => {
 
         // build formResponses from merch selections so they're stored in the registration record
         const mergedFormResponses = selectedEvent?.eventType === 'Merchandise' ? {
+            ...formResponses, // custom questions answered before opening payment modal
             ...(merchSelections.size && { Size: merchSelections.size }),
             ...(merchSelections.color && { Color: merchSelections.color }),
             Quantity: String(merchSelections.quantity)
-        } : {};
+        } : { ...formResponses }; // for paid normal events, carry over any custom field answers
 
         try {
             // paymentProofPreview is the full base64 data URL read by FileReader
