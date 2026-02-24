@@ -131,6 +131,23 @@ router.post('/:eventId/messages', auth, async (req, res) => {
             })
             .lean();
 
+        if (parentMessageId) {
+            // For replies: refresh the parent with all its replies and broadcast so
+            // every connected client sees the new reply without polling
+            const parentRaw = await Message.findById(parentMessageId)
+                .populate({ path: 'authorId', select: 'firstName lastName organizerName' })
+                .lean();
+            const replies = await Message.find({ eventId, parentMessageId, isDeleted: false })
+                .sort({ createdAt: 1 })
+                .populate({ path: 'authorId', select: 'firstName lastName organizerName' })
+                .lean();
+            const parentWithReplies = { ...parentRaw, replies, replyCount: replies.length };
+            io.to(`forum:${eventId}`).emit('message_updated', parentWithReplies);
+        } else {
+            // Top-level message — broadcast with empty replies so listeners can prepend it
+            io.to(`forum:${eventId}`).emit('new_message', { ...populatedMessage, replies: [], replyCount: 0 });
+        }
+
         res.json(populatedMessage);
 
     } catch (err) {
@@ -240,13 +257,29 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
         message.isDeleted = true; // soft delete - message stays in DB but is filtered out on fetch
         await message.save();
 
-        // Also soft delete all replies
-        await Message.updateMany(
-            { parentMessageId: message._id },
-            { isDeleted: true }
-        );
-
-        io.to(`forum:${message.eventId}`).emit('message_deleted', { messageId: message._id.toString() });
+        if (message.parentMessageId) {
+            // Deleting a reply: broadcast the refreshed parent so all clients update their reply list
+            const parentRaw = await Message.findById(message.parentMessageId)
+                .populate({ path: 'authorId', select: 'firstName lastName organizerName' })
+                .lean();
+            const remainingReplies = await Message.find({
+                eventId: message.eventId,
+                parentMessageId: message.parentMessageId,
+                isDeleted: false
+            })
+                .sort({ createdAt: 1 })
+                .populate({ path: 'authorId', select: 'firstName lastName organizerName' })
+                .lean();
+            const parentWithReplies = { ...parentRaw, replies: remainingReplies, replyCount: remainingReplies.length };
+            io.to(`forum:${message.eventId}`).emit('message_updated', parentWithReplies);
+        } else {
+            // Deleting a top-level message: also soft delete its replies, then tell clients to remove it
+            await Message.updateMany(
+                { parentMessageId: message._id },
+                { isDeleted: true }
+            );
+            io.to(`forum:${message.eventId}`).emit('message_deleted', { messageId: message._id.toString() });
+        }
 
         res.json({ msg: "Message deleted successfully" });
 

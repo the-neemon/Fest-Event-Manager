@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import Navbar from "../components/Navbar";
+import DiscussionForum from "../components/DiscussionForum";
 
 const EventDetailPage = () => {
     const { eventId } = useParams();
@@ -404,6 +405,12 @@ const EventDetailPage = () => {
                     )}
                 </div>
 
+                {/* Forum moderation — organizer can pin/delete messages, post announcements, reply to queries */}
+                {event && event.status !== 'Draft' && (
+                    <div style={{ marginTop: '30px' }}>
+                        <DiscussionForum eventId={eventId} isOrganizer={true} />
+                    </div>
+                )}
 
             </div>
         </div>

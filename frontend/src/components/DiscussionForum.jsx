@@ -230,22 +230,25 @@ const DiscussionForum = ({ eventId, isOrganizer }) => {
                         </span>
                     )}
                 </div>
-                {isOrganizer && !isReply && (
+                {isOrganizer && (
                     <div style={{ display: 'flex', gap: '5px' }}>
-                        <button
-                            onClick={() => handlePin(message._id)}
-                            style={{
-                                padding: '4px 8px',
-                                fontSize: '12px',
-                                backgroundColor: message.isPinned ? '#dc3545' : '#6c757d',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            {message.isPinned ? 'Unpin' : 'Pin'}
-                        </button>
+                        {/* Pin only applies to top-level messages */}
+                        {!isReply && (
+                            <button
+                                onClick={() => handlePin(message._id)}
+                                style={{
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    backgroundColor: message.isPinned ? '#dc3545' : '#6c757d',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {message.isPinned ? 'Unpin' : 'Pin'}
+                            </button>
+                        )}
                         <button
                             onClick={() => handleDelete(message._id)}
                             style={{
